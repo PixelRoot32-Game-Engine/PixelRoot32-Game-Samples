@@ -1,17 +1,18 @@
 #pragma once
 #include <cstdint>
+#include "graphics/Renderer.h"
 
 namespace spaceinvaders {
 
 // Sprites are defined as bitmaps where 1 = pixel on, 0 = pixel off.
 // We use uint16_t to accommodate widths up to 16px.
-// Bit 0 is the rightmost pixel (not used usually if we align left, but here:
-// We'll assume LSB is rightmost column.
-// e.g. 0x0001 is ......X
+// Bit 0 represents the leftmost pixel in the row.
+// Bit (width - 1) represents the rightmost pixel.
+// e.g. for width=8, bit 0 is column 0, bit 7 is column 7.
 
 // Squid (8x8)
 // Frame 1
-const uint16_t SQUID_F1[] = {
+static const uint16_t SQUID_F1_BITS[] = {
     0x0018, // ...XX...
     0x003C, // ..XXXX..
     0x007E, // .XXXXXX.
@@ -22,7 +23,7 @@ const uint16_t SQUID_F1[] = {
     0x00A5  // X.X..X.X
 };
 // Frame 2
-const uint16_t SQUID_F2[] = {
+static const uint16_t SQUID_F2_BITS[] = {
     0x0018, // ...XX...
     0x003C, // ..XXXX..
     0x007E, // .XXXXXX.
@@ -35,7 +36,7 @@ const uint16_t SQUID_F2[] = {
 
 // Crab (11x8)
 // Frame 1
-const uint16_t CRAB_F1[] = {
+static const uint16_t CRAB_F1_BITS[] = {
     0x00C0, // ..XX....... (padded to 11?) No, let's align right for simplicity or use specific bits.
             // Let's use visual bits: 00100000100 -> 0x104
     0x0208, // ..X.....X..
@@ -71,7 +72,7 @@ const uint16_t CRAB_F1[] = {
 
 // Actually, I'll use a simpler "visual" approach that looks good enough.
 // Crab F1 (11x8)
-const uint16_t CRAB_F1_REAL[] = {
+static const uint16_t CRAB_F1_REAL_BITS[] = {
     0x0104, // ..X.....X..
     0x0088, // ...X...X...
     0x01FC, // ..XXXXXXX..
@@ -82,7 +83,7 @@ const uint16_t CRAB_F1_REAL[] = {
     0x0000
 };
 // Crab F2
-const uint16_t CRAB_F2_REAL[] = {
+static const uint16_t CRAB_F2_REAL_BITS[] = {
     0x0104,
     0x03F8,
     0x01FC,
@@ -95,7 +96,7 @@ const uint16_t CRAB_F2_REAL[] = {
 
 // Octopus (12x8)
 // Frame 1
-const uint16_t OCTOPUS_F1[] = {
+static const uint16_t OCTOPUS_F1_BITS[] = {
     0x0000,
     0x01E0, // ....XXXX....
     0x07F8, // .XXXXXXXXXX.
@@ -106,7 +107,7 @@ const uint16_t OCTOPUS_F1[] = {
     0x0210  // ..X......X..
 };
 // Frame 2
-const uint16_t OCTOPUS_F2[] = {
+static const uint16_t OCTOPUS_F2_BITS[] = {
     0x0000,
     0x01E0, // ....XXXX....
     0x07F8, // .XXXXXXXXXX.
@@ -115,6 +116,41 @@ const uint16_t OCTOPUS_F2[] = {
     0x02D0, // ..X.XXXX.X..
     0x0528, // .X.X....X.X.
     0x0000
+};
+
+// Sprite descriptors that can be reused by multiple actors.
+static const pixelroot32::graphics::Sprite SQUID_F1 = { SQUID_F1_BITS, 8, 8 };
+static const pixelroot32::graphics::Sprite SQUID_F2 = { SQUID_F2_BITS, 8, 8 };
+
+static const pixelroot32::graphics::Sprite CRAB_F1_REAL = { CRAB_F1_REAL_BITS, 11, 8 };
+static const pixelroot32::graphics::Sprite CRAB_F2_REAL = { CRAB_F2_REAL_BITS, 11, 8 };
+
+static const pixelroot32::graphics::Sprite OCTOPUS_F1 = { OCTOPUS_F1_BITS, 12, 8 };
+static const pixelroot32::graphics::Sprite OCTOPUS_F2 = { OCTOPUS_F2_BITS, 12, 8 };
+
+// Example layered sprite using MultiSprite (body + eyes highlight).
+// Eyes layer only sets a small subset of pixels, rendered in a second color.
+static const uint16_t CRAB_EYES_BITS[] = {
+    0x0000,
+    0x0000,
+    0x0000,
+    0x0000,
+    0x0000,
+    0x0240, // simple eye highlight pattern
+    0x0000,
+    0x0000
+};
+
+static const pixelroot32::graphics::SpriteLayer CRAB_LAYERS_F1[] = {
+    { CRAB_F1_REAL_BITS, pixelroot32::graphics::Color::Orange },
+    { CRAB_EYES_BITS,    pixelroot32::graphics::Color::White }
+};
+
+static const pixelroot32::graphics::MultiSprite CRAB_F1_MULTI = {
+    11,
+    8,
+    CRAB_LAYERS_F1,
+    2
 };
 
 }

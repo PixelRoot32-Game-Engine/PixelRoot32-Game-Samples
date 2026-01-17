@@ -12,6 +12,8 @@ struct Point {
     int y;
 };
 
+class SnakeSegmentActor;
+
 enum Direction {
     DIR_UP,
     DIR_DOWN,
@@ -27,7 +29,7 @@ public:
     void draw(pixelroot32::graphics::Renderer& renderer) override;
 
 private:
-    std::vector<Point> snake;
+    std::vector<SnakeSegmentActor*> snakeSegments;
     Point food;
     Direction dir;
     Direction nextDir;
@@ -41,4 +43,3 @@ private:
 };
 
 }
-

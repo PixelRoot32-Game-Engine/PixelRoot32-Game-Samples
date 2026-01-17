@@ -21,6 +21,7 @@ public:
     
     bool isActive() const { return active; }
     void deactivate() { active = false; }
+    ProjectileType getType() const { return type; }
 
 private:
     ProjectileType type;

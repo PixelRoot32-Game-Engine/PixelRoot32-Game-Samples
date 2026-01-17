@@ -9,10 +9,8 @@ namespace spaceinvaders {
 
 PlayerActor::PlayerActor(float x, float y)
     : PhysicsActor(x, y, PLAYER_WIDTH, PLAYER_HEIGHT), isAlive(true) {
-    // Set collision layer (example: Layer 1 for Player)
-    // We assume standard layers are available or we define them.
-    // For now, we'll just set it. 
-    // TODO: Define layers properly in GameConstants or use Engine defaults.
+    setWorldSize(LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    setLimits(pr32::core::LimitRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT));
 }
 
 void PlayerActor::update(unsigned long deltaTime) {

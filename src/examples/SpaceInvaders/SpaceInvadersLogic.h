@@ -7,10 +7,9 @@
 
 namespace SpaceInvaders {
 
-    // Atari 2600 Constants
     namespace Constants {
-        constexpr int LOGICAL_WIDTH = 160;
-        constexpr int LOGICAL_HEIGHT = 192;
+        constexpr int LOGICAL_WIDTH = 240;
+        constexpr int LOGICAL_HEIGHT = 240;
         
         // Base movement speeds (pixels per second)
         constexpr float BASE_PLAYER_SPEED = 60.0f;
@@ -19,10 +18,11 @@ namespace SpaceInvaders {
         // Grid configuration
         constexpr int ALIEN_ROWS = 5;
         constexpr int ALIEN_COLS = 11;
-        constexpr float ALIEN_START_X = 20.0f;
-        constexpr float ALIEN_START_Y = 40.0f;
         constexpr float ALIEN_SPACING_X = 10.0f;
         constexpr float ALIEN_SPACING_Y = 12.0f;
+        constexpr float ALIEN_GRID_WIDTH = (ALIEN_COLS - 1) * ALIEN_SPACING_X + 12.0f;
+        constexpr float ALIEN_START_X = (LOGICAL_WIDTH - ALIEN_GRID_WIDTH) * 0.5f;
+        constexpr float ALIEN_START_Y = 40.0f;
     }
 
     enum class EntityType {

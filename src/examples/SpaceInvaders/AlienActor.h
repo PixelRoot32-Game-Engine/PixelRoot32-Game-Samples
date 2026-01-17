@@ -30,7 +30,7 @@ public:
 private:
     AlienType type;
     bool active;
-    bool animationFrame; // For simple animation toggling
+    pixelroot32::graphics::SpriteAnimation animation;
 };
 
 }

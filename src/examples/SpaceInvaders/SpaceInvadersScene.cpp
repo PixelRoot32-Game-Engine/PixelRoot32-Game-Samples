@@ -2,15 +2,141 @@
 #include "PlayerActor.h"
 #include "AlienActor.h"
 #include "ProjectileActor.h"
+#include "BunkerActor.h"
 #include "GameConstants.h"
 #include "core/Engine.h"
+#include <cstdlib>
+#include <cstdio>
 
 namespace pr32 = pixelroot32;
 extern pr32::core::Engine engine;
 
 namespace spaceinvaders {
 
-SpaceInvadersScene::SpaceInvadersScene() : player(nullptr), score(0), lives(3), gameOver(false) {
+using pixelroot32::graphics::Sprite;
+using pixelroot32::graphics::SpriteAnimationFrame;
+
+// Simple 8x8 explosion sprites for the player explosion animation.
+// Frames are intentionally small and cheap to draw on ESP32.
+static const uint16_t PLAYER_EXPLOSION_F1_BITS[] = {
+    0b00011000,
+    0b00111100,
+    0b01111110,
+    0b11111111,
+    0b11111111,
+    0b01111110,
+    0b00111100,
+    0b00011000
+};
+
+static const uint16_t PLAYER_EXPLOSION_F2_BITS[] = {
+    0b00100100,
+    0b01011010,
+    0b10111101,
+    0b11111111,
+    0b11111111,
+    0b10111101,
+    0b01011010,
+    0b00100100
+};
+
+static const uint16_t PLAYER_EXPLOSION_F3_BITS[] = {
+    0b00000000,
+    0b00100100,
+    0b01000010,
+    0b10011001,
+    0b10011001,
+    0b01000010,
+    0b00100100,
+    0b00000000
+};
+
+static const Sprite PLAYER_EXPLOSION_F1 = { PLAYER_EXPLOSION_F1_BITS, 8, 8 };
+static const Sprite PLAYER_EXPLOSION_F2 = { PLAYER_EXPLOSION_F2_BITS, 8, 8 };
+static const Sprite PLAYER_EXPLOSION_F3 = { PLAYER_EXPLOSION_F3_BITS, 8, 8 };
+
+static const SpriteAnimationFrame PLAYER_EXPLOSION_FRAMES[] = {
+    { &PLAYER_EXPLOSION_F1, nullptr },
+    { &PLAYER_EXPLOSION_F2, nullptr },
+    { &PLAYER_EXPLOSION_F3, nullptr }
+};
+
+ExplosionAnimation::ExplosionAnimation()
+    : active(false), x(0.0f), y(0.0f), timeAccumulator(0), stepsDone(0) {
+    animation.frames = PLAYER_EXPLOSION_FRAMES;
+    animation.frameCount = static_cast<uint8_t>(sizeof(PLAYER_EXPLOSION_FRAMES) / sizeof(SpriteAnimationFrame));
+    animation.current = 0;
+}
+
+void ExplosionAnimation::start(float startX, float startY) {
+    // Begin playing the explosion animation from the first frame.
+    x = startX;
+    y = startY;
+    timeAccumulator = 0;
+    stepsDone = 0;
+    animation.reset();
+    active = true;
+}
+
+void ExplosionAnimation::update(unsigned long deltaTime) {
+    if (!active) {
+        return;
+    }
+
+    // Advance animation frames using a small fixed timestep.
+    const unsigned long frameTimeMs = 60;
+    timeAccumulator += deltaTime;
+
+    while (timeAccumulator >= frameTimeMs && active) {
+        timeAccumulator -= frameTimeMs;
+
+        // Step only while there are remaining frames; do not loop.
+        if (stepsDone + 1 < animation.frameCount) {
+            animation.step();
+            stepsDone++;
+        } else {
+            active = false;
+        }
+    }
+}
+
+void ExplosionAnimation::draw(pr32::graphics::Renderer& renderer) {
+    if (!active) {
+        return;
+    }
+
+    const Sprite* sprite = animation.getCurrentSprite();
+    if (!sprite) {
+        return;
+    }
+
+    const int drawX = static_cast<int>(x);
+    const int drawY = static_cast<int>(y);
+
+    renderer.drawSprite(*sprite, drawX, drawY, pr32::graphics::Color::White);
+}
+
+bool ExplosionAnimation::isActive() const {
+    return active;
+}
+
+SpaceInvadersScene::SpaceInvadersScene()
+    : player(nullptr),
+      score(0),
+      lives(3),
+      gameOver(false),
+      stepTimer(0),
+      stepDelay(0),
+      moveDirection(1),
+      isPaused(false) {
+
+    // Initialize enemy explosion slots as inactive.
+    for (int i = 0; i < MaxEnemyExplosions; ++i) {
+        enemyExplosions[i].active = false;
+        enemyExplosions[i].x = 0.0f;
+        enemyExplosions[i].y = 0.0f;
+        enemyExplosions[i].remainingMs = 0;
+    }
 }
 
 SpaceInvadersScene::~SpaceInvadersScene() {
@@ -22,6 +148,8 @@ void SpaceInvadersScene::init() {
 }
 
 void SpaceInvadersScene::cleanup() {
+    clearEntities();
+
     if (player) {
         delete player;
         player = nullptr;
@@ -34,6 +162,10 @@ void SpaceInvadersScene::cleanup() {
         delete proj;
     }
     projectiles.clear();
+    for (auto* bunker : bunkers) {
+        delete bunker;
+    }
+    bunkers.clear();
 }
 
 void SpaceInvadersScene::resetGame() {
@@ -41,14 +173,21 @@ void SpaceInvadersScene::resetGame() {
 
     // Spawn Player
     player = new PlayerActor(PLAYER_START_X, PLAYER_START_Y);
-    // Note: We don't add to base Scene::addEntity because we manage it manually 
-    // to avoid MAX_ENTITIES limit issues with aliens.
+    addEntity(player);
 
     spawnAliens();
+    spawnBunkers();
 
     score = 0;
     lives = 3;
     gameOver = false;
+    isPaused = false;
+
+    // Clear any pending visual effects.
+    for (int i = 0; i < MaxEnemyExplosions; ++i) {
+        enemyExplosions[i].active = false;
+        enemyExplosions[i].remainingMs = 0;
+    }
     
     stepTimer = 0;
     moveDirection = 1;
@@ -68,7 +207,25 @@ void SpaceInvadersScene::spawnAliens() {
             
             AlienActor* alien = new AlienActor(x, y, type);
             aliens.push_back(alien);
+            addEntity(alien);
         }
+    }
+}
+
+void SpaceInvadersScene::spawnBunkers() {
+    if (BUNKER_COUNT <= 0) {
+        return;
+    }
+
+    float totalBunkersWidth = BUNKER_COUNT * BUNKER_WIDTH;
+    float gap = (LOGICAL_WIDTH - totalBunkersWidth) / (BUNKER_COUNT + 1);
+
+    for (int i = 0; i < BUNKER_COUNT; ++i) {
+        float x = gap + i * (BUNKER_WIDTH + gap);
+        float y = BUNKER_Y - BUNKER_HEIGHT;
+        BunkerActor* bunker = new BunkerActor(x, y, BUNKER_WIDTH, BUNKER_HEIGHT, 4);
+        bunkers.push_back(bunker);
+        addEntity(bunker);
     }
 }
 
@@ -80,24 +237,59 @@ void SpaceInvadersScene::update(unsigned long deltaTime) {
         return;
     }
 
-    // Update Player
-    if (player) {
-        player->update(deltaTime);
+    if (isPaused) {
+        // While paused, only update visual effects (explosion, enemy impacts).
+        playerExplosion.update(deltaTime);
+        updateEnemyExplosions(deltaTime);
+
+        // When the player explosion completes, resume gameplay and respawn.
+        if (!playerExplosion.isActive()) {
+            respawnPlayerUnderBunker();
+            isPaused = false;
+        }
+        return;
     }
 
-    // Update Projectiles
+    Scene::update(deltaTime);
+
+    auto& input = engine.getInputManager();
+
+    if (player) {
+        if (input.isButtonPressed(BTN_FIRE)) {
+            bool hasPlayerBullet = false;
+            for (auto* proj : projectiles) {
+                if (proj->isActive() && proj->getType() == ProjectileType::PLAYER_BULLET) {
+                    hasPlayerBullet = true;
+                    break;
+                }
+            }
+            if (!hasPlayerBullet) {
+                float px = player->x + (PLAYER_WIDTH - PROJECTILE_WIDTH) / 2.0f;
+                float py = player->y - PROJECTILE_HEIGHT;
+                ProjectileActor* bullet = new ProjectileActor(px, py, ProjectileType::PLAYER_BULLET);
+                projectiles.push_back(bullet);
+                addEntity(bullet);
+            }
+        }
+    }
+
     for (auto it = projectiles.begin(); it != projectiles.end(); ) {
-        (*it)->update(deltaTime);
-        if (!(*it)->isActive()) {
-            delete *it;
+        ProjectileActor* proj = *it;
+        if (!proj->isActive()) {
+            removeEntity(proj);
+            delete proj;
             it = projectiles.erase(it);
         } else {
             ++it;
         }
     }
 
-    // Update Aliens
     updateAliens(deltaTime);
+
+    handleCollisions();
+
+    // Update enemy hit explosions while gameplay is running.
+    updateEnemyExplosions(deltaTime);
 }
 
 void SpaceInvadersScene::updateAliens(unsigned long deltaTime) {
@@ -140,7 +332,150 @@ void SpaceInvadersScene::updateAliens(unsigned long deltaTime) {
                 }
             }
         }
+
+        enemyShoot();
     }
+}
+
+void SpaceInvadersScene::handleCollisions() {
+    for (auto* proj : projectiles) {
+        if (!proj->isActive()) {
+            continue;
+        }
+        if (proj->getType() == ProjectileType::PLAYER_BULLET) {
+            pixelroot32::core::Rect pBox = proj->getHitBox();
+            for (auto* alien : aliens) {
+                if (!alien->isActive()) {
+                    continue;
+                }
+                if (pBox.intersects(alien->getHitBox())) {
+                    proj->deactivate();
+                    alien->kill();
+                    score += alien->getScoreValue();
+                    calculateStepDelay();
+                    // Spawn a short-lived enemy explosion effect at the impact position.
+                    float ex = alien->x + alien->width * 0.5f;
+                    float ey = alien->y + alien->height * 0.5f;
+                    spawnEnemyExplosion(ex, ey);
+                    break;
+                }
+            }
+            if (proj->isActive()) {
+                for (auto* bunker : bunkers) {
+                    if (bunker->isDestroyed()) {
+                        continue;
+                    }
+                    if (pBox.intersects(bunker->getHitBox())) {
+                        proj->deactivate();
+                        bunker->applyDamage(1);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    if (!player) {
+        return;
+    }
+
+    pixelroot32::core::Rect playerBox = player->getHitBox();
+    for (auto* proj : projectiles) {
+        if (!proj->isActive()) {
+            continue;
+        }
+        if (proj->getType() == ProjectileType::ENEMY_BULLET) {
+            pixelroot32::core::Rect eBox = proj->getHitBox();
+            bool handled = false;
+            for (auto* bunker : bunkers) {
+                if (bunker->isDestroyed()) {
+                    continue;
+                }
+                if (eBox.intersects(bunker->getHitBox())) {
+                    proj->deactivate();
+                    bunker->applyDamage(1);
+                    handled = true;
+                    break;
+                }
+            }
+            if (handled) {
+                continue;
+            }
+            if (eBox.intersects(playerBox)) {
+                proj->deactivate();
+                handlePlayerHit();
+                break;
+            }
+        }
+    }
+}
+
+void SpaceInvadersScene::enemyShoot() {
+    std::vector<AlienActor*> bottomAliens;
+    for (auto* candidate : aliens) {
+        if (!candidate->isActive()) {
+            continue;
+        }
+        bool hasBelow = false;
+        for (auto* other : aliens) {
+            if (!other->isActive()) {
+                continue;
+            }
+            if (other->x == candidate->x && other->y > candidate->y) {
+                hasBelow = true;
+                break;
+            }
+        }
+        if (!hasBelow) {
+            bottomAliens.push_back(candidate);
+        }
+    }
+
+    if (bottomAliens.empty()) {
+        return;
+    }
+
+    int activeEnemyBullets = 0;
+    for (auto* proj : projectiles) {
+        if (proj->isActive() && proj->getType() == ProjectileType::ENEMY_BULLET) {
+            activeEnemyBullets++;
+        }
+    }
+    if (activeEnemyBullets >= 4) {
+        return;
+    }
+
+    int total = ALIEN_ROWS * ALIEN_COLS;
+    int alive = getActiveAlienCount();
+    if (alive <= 0) {
+        return;
+    }
+
+    float t = 1.0f - static_cast<float>(alive) / static_cast<float>(total);
+    int minChance = 8;
+    int maxChance = 30;
+    int chance = minChance + static_cast<int>(t * (maxChance - minChance));
+    if (chance < minChance) chance = minChance;
+    if (chance > maxChance) chance = maxChance;
+
+    int roll = std::rand() % 100;
+    if (roll >= chance) {
+        return;
+    }
+
+    int r = std::rand();
+    if (r < 0) {
+        r = -r;
+    }
+    std::size_t index = static_cast<std::size_t>(r) % bottomAliens.size();
+    AlienActor* shooter = bottomAliens[index];
+
+    float sx = shooter->x + shooter->width / 2.0f;
+    float sy = shooter->y + shooter->height;
+
+    ProjectileActor* bullet = new ProjectileActor(sx, sy, ProjectileType::ENEMY_BULLET);
+    projectiles.push_back(bullet);
+    addEntity(bullet);
 }
 
 int SpaceInvadersScene::getActiveAlienCount() const {
@@ -156,31 +491,133 @@ void SpaceInvadersScene::calculateStepDelay() {
     if (count == 0) return;
     
     int total = ALIEN_ROWS * ALIEN_COLS;
-    // Linear speed increase
     stepDelay = INITIAL_STEP_DELAY * count / total;
-    
-    // Clamp minimum speed (fastest)
-    if (stepDelay < 50) stepDelay = 50; 
+    if (stepDelay < MIN_STEP_DELAY) stepDelay = MIN_STEP_DELAY; 
 }
 
 void SpaceInvadersScene::draw(pr32::graphics::Renderer& renderer) {
-    // Clear screen
     renderer.drawFilledRectangle(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT, pr32::graphics::Color::Black);
+    Scene::draw(renderer);
 
-    if (player) {
-        player->draw(renderer);
+    // Draw enemy explosions and player explosion on top of entities.
+    drawEnemyExplosions(renderer);
+    playerExplosion.draw(renderer);
+
+    char buffer[32];
+
+    std::snprintf(buffer, sizeof(buffer), "SCORE %04d", score);
+    renderer.drawText(buffer, 4, 4, pr32::graphics::Color::White, 1);
+
+    std::snprintf(buffer, sizeof(buffer), "LIVES %d", lives);
+    renderer.drawText(buffer, LOGICAL_WIDTH - 70, 4, pr32::graphics::Color::White, 1);
+
+    if (gameOver) {
+        std::snprintf(buffer, sizeof(buffer), "GAME OVER");
+        int textY = LOGICAL_HEIGHT / 2 - 8;
+        renderer.drawTextCentered(buffer, textY, pr32::graphics::Color::Red, 2);
+
+        std::snprintf(buffer, sizeof(buffer), "PRESS FIRE");
+        renderer.drawTextCentered(buffer, textY + 20, pr32::graphics::Color::White, 1);
+    }
+}
+
+void SpaceInvadersScene::updateEnemyExplosions(unsigned long deltaTime) {
+    for (int i = 0; i < MaxEnemyExplosions; ++i) {
+        EnemyExplosion& e = enemyExplosions[i];
+        if (!e.active) {
+            continue;
+        }
+
+        if (deltaTime >= e.remainingMs) {
+            e.active = false;
+            e.remainingMs = 0;
+        } else {
+            e.remainingMs -= deltaTime;
+        }
+    }
+}
+
+void SpaceInvadersScene::drawEnemyExplosions(pr32::graphics::Renderer& renderer) {
+    using Color = pr32::graphics::Color;
+
+    for (int i = 0; i < MaxEnemyExplosions; ++i) {
+        const EnemyExplosion& e = enemyExplosions[i];
+        if (!e.active) {
+            continue;
+        }
+
+        // Simple, cheap visual feedback: small white cross at impact position.
+        int cx = static_cast<int>(e.x);
+        int cy = static_cast<int>(e.y);
+
+        renderer.drawFilledRectangle(cx - 1, cy, 3, 1, Color::White);
+        renderer.drawFilledRectangle(cx, cy - 1, 1, 3, Color::White);
+    }
+}
+
+void SpaceInvadersScene::spawnEnemyExplosion(float x, float y) {
+    // Reuse the first available slot to avoid dynamic allocations.
+    for (int i = 0; i < MaxEnemyExplosions; ++i) {
+        EnemyExplosion& e = enemyExplosions[i];
+        if (!e.active) {
+            e.active = true;
+            e.x = x;
+            e.y = y;
+            e.remainingMs = 200;
+            return;
+        }
+    }
+}
+
+void SpaceInvadersScene::handlePlayerHit() {
+    if (lives > 0) {
+        lives -= 1;
     }
 
-    for (auto* alien : aliens) {
-        alien->draw(renderer);
+    if (lives <= 0) {
+        gameOver = true;
+        return;
     }
 
-    for (auto* proj : projectiles) {
-        proj->draw(renderer);
+    if (!player) {
+        return;
     }
 
-    // Simple HUD
-    // ...
+    // Start the explosion animation at the player's current position.
+    float ex = player->x;
+    float ey = player->y;
+    playerExplosion.start(ex, ey);
+
+    // Hide the player while the explosion is playing.
+    player->setVisible(false);
+
+    // Pause gameplay logic while keeping rendering active.
+    isPaused = true;
+}
+
+void SpaceInvadersScene::respawnPlayerUnderBunker() {
+    if (!player) {
+        return;
+    }
+
+    // Choose the first non-destroyed bunker as a respawn anchor.
+    BunkerActor* targetBunker = nullptr;
+    for (auto* bunker : bunkers) {
+        if (!bunker->isDestroyed()) {
+            targetBunker = bunker;
+            break;
+        }
+    }
+
+    float newX = PLAYER_START_X;
+
+    if (targetBunker) {
+        newX = targetBunker->x + (targetBunker->width - PLAYER_WIDTH) * 0.5f;
+    }
+
+    // Reset player position and make it visible again.
+    player->x = newX;
+    player->setVisible(true);
 }
 
 }

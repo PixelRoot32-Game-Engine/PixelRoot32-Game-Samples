@@ -15,8 +15,8 @@ namespace pr32 = pixelroot32;
 extern pr32::core::Engine engine;
 
 // Define instances here
-pong::PongScene pongScene;
-brickbreaker::BrickBreakerScene brickScene;
+// pong::PongScene pongScene;
+// brickbreaker::BrickBreakerScene brickScene;
 tictactoe::TicTacToeScene tttScene;
 geometryjump::GeometryJumpScene geometryScene;
 snake::SnakeScene snakeScene;
@@ -43,32 +43,32 @@ void MenuScene::init() {
     float gap = menu::BTN_GAP;
 
     // Use index 4 (Space/Action) for the activation button
-    pongButton = new pr32::graphics::ui::UIButton("PONG", menu::BTN_SELECT, btnX, startY, btnW, btnH, []() {
-        engine.setScene(&pongScene);
-    });
-    addEntity(pongButton);
+    // pongButton = new pr32::graphics::ui::UIButton("PONG", menu::BTN_SELECT, btnX, startY, btnW, btnH, []() {
+    //     engine.setScene(&pongScene);
+    // });
+    // addEntity(pongButton);
 
-    brickButton = new pr32::graphics::ui::UIButton("BRICKBREAK", menu::BTN_SELECT, btnX, startY + btnH + gap, btnW, btnH, []() {
-        engine.setScene(&brickScene);
-    });
-    addEntity(brickButton);
+    // brickButton = new pr32::graphics::ui::UIButton("BRICKBREAK", menu::BTN_SELECT, btnX, startY + btnH + gap, btnW, btnH, []() {
+    //     engine.setScene(&brickScene);
+    // });
+    // addEntity(brickButton);
 
-    tttButton = new pr32::graphics::ui::UIButton("TIC TAC TOE", menu::BTN_SELECT, btnX, startY + 2*btnH + gap, btnW, btnH, []() {
+    tttButton = new pr32::graphics::ui::UIButton("TIC TAC TOE", menu::BTN_SELECT, btnX, startY + gap, btnW, btnH, []() {
         engine.setScene(&tttScene);
     });
     addEntity(tttButton);
 
-    geometryButton = new pr32::graphics::ui::UIButton("GEOMETRY JUMP", menu::BTN_SELECT, btnX, startY + 3*btnH + gap, btnW, btnH, []() {
+    geometryButton = new pr32::graphics::ui::UIButton("GEOMETRY JUMP", menu::BTN_SELECT, btnX, startY + btnH + gap, btnW, btnH, []() {
         engine.setScene(&geometryScene);
     });
     addEntity(geometryButton);
 
-    snakeButton = new pr32::graphics::ui::UIButton("SNAKE", menu::BTN_SELECT, btnX, startY + 4*btnH + gap, btnW, btnH, []() {
+    snakeButton = new pr32::graphics::ui::UIButton("SNAKE", menu::BTN_SELECT, btnX, startY + 1*btnH + gap, btnW, btnH, []() {
         engine.setScene(&snakeScene);
     });
     addEntity(snakeButton);
 
-    spaceInvadersButton = new pr32::graphics::ui::UIButton("SPACE INVADERS", menu::BTN_SELECT, btnX, startY + 5*btnH + gap, btnW, btnH, []() {
+    spaceInvadersButton = new pr32::graphics::ui::UIButton("SPACE INVADERS", menu::BTN_SELECT, btnX, startY + 2*btnH + gap, btnW, btnH, []() {
         engine.setScene(&spaceInvadersScene);
     });
     addEntity(spaceInvadersButton);
@@ -143,8 +143,8 @@ void MenuScene::update(unsigned long deltaTime) {
     // Trigger button logic (checks for button 4 press if selected)
     // UIButton::handleInput uses isButtonPressed internally which might also have issues,
     // but let's test navigation first.
-    pongButton->handleInput(input);
-    brickButton->handleInput(input);
+    // pongButton->handleInput(input);
+    // brickButton->handleInput(input);
     tttButton->handleInput(input);
     geometryButton->handleInput(input);
     snakeButton->handleInput(input);
@@ -155,11 +155,11 @@ void MenuScene::updateButtonStyles() {
     // Style: Selected = Cyan BG + White Text
     //        Unselected = No BG + White Text
     
-    pongButton->setSelected(selectedIndex == 0);
-    pongButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 0)); 
+    // pongButton->setSelected(selectedIndex == 0);
+    // pongButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 0)); 
 
-    brickButton->setSelected(selectedIndex == 1);
-    brickButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 1));
+    // brickButton->setSelected(selectedIndex == 1);
+    // brickButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 1));
 
     tttButton->setSelected(selectedIndex == 2);
     tttButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 2));

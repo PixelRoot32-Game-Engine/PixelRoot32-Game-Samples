@@ -21,12 +21,12 @@ const int DAC_PIN = 25; // GPIO 25 or 26
 
 // Button Mapping (Arduino ESP32)
 // Common mapping for 5-directional pad and A button
-const int BTN_UP = 13;
-const int BTN_DOWN = 12;
-const int BTN_LEFT = 14;
-const int BTN_RIGHT = 32;
-const int BTN_A = 33;
-const int BTN_B = 34;
+const int BTN_UP = 32;
+const int BTN_DOWN = 27;
+const int BTN_LEFT = 33;
+const int BTN_RIGHT = 14;
+const int BTN_A = 13;
+const int BTN_B = 12;
 
 pr32::drivers::esp32::TFT_eSPI_Drawer drawer;
 

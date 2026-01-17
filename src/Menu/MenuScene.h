@@ -11,8 +11,8 @@ public:
 
 private:
     pixelroot32::graphics::ui::UILabel* titleLabel;
-    pixelroot32::graphics::ui::UIButton* pongButton;
-    pixelroot32::graphics::ui::UIButton* brickButton;
+    // pixelroot32::graphics::ui::UIButton* pongButton;
+    // pixelroot32::graphics::ui::UIButton* brickButton;
     pixelroot32::graphics::ui::UIButton* tttButton;
     pixelroot32::graphics::ui::UIButton* geometryButton;
     pixelroot32::graphics::ui::UIButton* snakeButton;

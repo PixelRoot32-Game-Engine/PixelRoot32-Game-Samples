@@ -12,11 +12,12 @@ ProjectileActor::ProjectileActor(float x, float y, ProjectileType type)
 
 void ProjectileActor::update(unsigned long deltaTime) {
     if (!active) return;
-    
-    PhysicsActor::update(deltaTime);
-    
-    // Deactivate if out of bounds
-    if (y < 0 || y > LOGICAL_HEIGHT) {
+
+    float dt = deltaTime * 0.001f;
+    x += vx * dt;
+    y += vy * dt;
+
+    if (y < -PROJECTILE_HEIGHT || y > LOGICAL_HEIGHT) {
         active = false;
     }
 }

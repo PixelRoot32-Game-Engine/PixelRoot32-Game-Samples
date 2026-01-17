@@ -1,5 +1,6 @@
 #include "SnakeScene.h"
 #include "core/Engine.h"
+#include "core/Actor.h"
 #include "audio/AudioTypes.h"
 #include <cstdio>
 #include <cstdlib>
@@ -10,6 +11,82 @@ namespace pr32 = pixelroot32;
 extern pr32::core::Engine engine;
 
 namespace snake {
+
+using CollisionLayer = pr32::physics::CollisionLayer;
+
+static constexpr CollisionLayer LAYER_SNAKE_HEAD = 1 << 0;
+static constexpr CollisionLayer LAYER_SNAKE_BODY = 1 << 1;
+
+class SnakeSegmentActor : public pr32::core::Actor {
+public:
+    SnakeSegmentActor(int gridX, int gridY, bool head)
+        : pr32::core::Actor(gridX * CELL_SIZE, gridY * CELL_SIZE, CELL_SIZE - 1, CELL_SIZE - 1),
+          cellX(gridX),
+          cellY(gridY),
+          isHead(head),
+          alive(true) {
+        setHead(head);
+    }
+
+    void update(unsigned long deltaTime) override {
+        (void)deltaTime;
+    }
+
+    void draw(pr32::graphics::Renderer& renderer) override {
+        using Color = pr32::graphics::Color;
+        Color color = isHead ? Color::LightGreen : Color::DarkGreen;
+        renderer.drawFilledRectangle(cellX * CELL_SIZE, cellY * CELL_SIZE, CELL_SIZE - 1, CELL_SIZE - 1, color);
+    }
+
+    pr32::core::Rect getHitBox() override {
+        return { static_cast<float>(cellX * CELL_SIZE), static_cast<float>(cellY * CELL_SIZE), CELL_SIZE - 1, CELL_SIZE - 1 };
+    }
+
+    void onCollision(pr32::core::Actor* other) override {
+        (void)other;
+        if (isHead) {
+            alive = false;
+        }
+    }
+
+    void setCellPosition(int gridX, int gridY) {
+        cellX = gridX;
+        cellY = gridY;
+    }
+
+    int getCellX() const {
+        return cellX;
+    }
+
+    int getCellY() const {
+        return cellY;
+    }
+
+    void setHead(bool head) {
+        isHead = head;
+        if (isHead) {
+            setCollisionLayer(LAYER_SNAKE_HEAD);
+            setCollisionMask(LAYER_SNAKE_BODY);
+        } else {
+            setCollisionLayer(LAYER_SNAKE_BODY);
+            setCollisionMask(0);
+        }
+    }
+
+    void resetAlive() {
+        alive = true;
+    }
+
+    bool isAlive() const {
+        return alive;
+    }
+
+private:
+    int cellX;
+    int cellY;
+    bool isHead;
+    bool alive;
+};
 
 SnakeScene::SnakeScene()
     : dir(DIR_RIGHT),
@@ -30,14 +107,24 @@ void SnakeScene::init() {
 }
 
 void SnakeScene::resetGame() {
-    snake.clear();
+    for (auto* segment : snakeSegments) {
+        removeEntity(segment);
+        delete segment;
+    }
+    snakeSegments.clear();
 
     int centerX = GRID_WIDTH / 2;
     int centerY = GRID_HEIGHT / 2;
 
-    snake.push_back({centerX, centerY});
-    snake.push_back({centerX - 1, centerY});
-    snake.push_back({centerX - 2, centerY});
+    const int initialLength = 12;
+    for (int i = 0; i < initialLength; ++i) {
+        int x = centerX - i;
+        int y = centerY;
+        bool head = (i == 0);
+        auto* segment = new SnakeSegmentActor(x, y, head);
+        snakeSegments.push_back(segment);
+        addEntity(segment);
+    }
 
     dir = DIR_RIGHT;
     nextDir = DIR_RIGHT;
@@ -54,8 +141,8 @@ void SnakeScene::spawnFood() {
         int fx = std::rand() % GRID_WIDTH;
         int fy = std::rand() % GRID_HEIGHT;
         valid = true;
-        for (const auto& p : snake) {
-            if (p.x == fx && p.y == fy) {
+        for (const auto* segment : snakeSegments) {
+            if (segment->getCellX() == fx && segment->getCellY() == fy) {
                 valid = false;
                 break;
             }
@@ -68,8 +155,6 @@ void SnakeScene::spawnFood() {
 }
 
 void SnakeScene::update(unsigned long deltaTime) {
-    pr32::core::Scene::update(deltaTime);
-
     auto& input = engine.getInputManager();
     auto& audio = engine.getAudioEngine();
 
@@ -105,18 +190,25 @@ void SnakeScene::update(unsigned long deltaTime) {
         lastMoveTime = now;
         dir = nextDir;
 
-        Point newHead = snake[0];
-        if (dir == DIR_UP) {
-            newHead.y -= 1;
-        } else if (dir == DIR_DOWN) {
-            newHead.y += 1;
-        } else if (dir == DIR_LEFT) {
-            newHead.x -= 1;
-        } else if (dir == DIR_RIGHT) {
-            newHead.x += 1;
+        if (snakeSegments.empty()) {
+            return;
         }
 
-        if (newHead.x < 0 || newHead.x >= GRID_WIDTH || newHead.y < 0 || newHead.y >= GRID_HEIGHT) {
+        SnakeSegmentActor* headSegment = snakeSegments[0];
+        int newX = headSegment->getCellX();
+        int newY = headSegment->getCellY();
+
+        if (dir == DIR_UP) {
+            newY -= 1;
+        } else if (dir == DIR_DOWN) {
+            newY += 1;
+        } else if (dir == DIR_LEFT) {
+            newX -= 1;
+        } else if (dir == DIR_RIGHT) {
+            newX += 1;
+        }
+
+        if (newX < 0 || newX >= GRID_WIDTH || newY < 0 || newY >= GRID_HEIGHT) {
             gameOver = true;
             pr32::audio::AudioEvent ev{};
             ev.type = pr32::audio::WaveType::NOISE;
@@ -128,23 +220,17 @@ void SnakeScene::update(unsigned long deltaTime) {
             return;
         }
 
-        for (const auto& p : snake) {
-            if (p.x == newHead.x && p.y == newHead.y) {
-                gameOver = true;
-                pr32::audio::AudioEvent ev{};
-                ev.type = pr32::audio::WaveType::NOISE;
-                ev.frequency = 700.0f;
-                ev.duration = 0.25f;
-                ev.volume = 0.9f;
-                ev.duty = 0.5f;
-                audio.playEvent(ev);
-                return;
+        bool ateFood = (newX == food.x && newY == food.y);
+
+        if (ateFood) {
+            auto* newHeadSegment = new SnakeSegmentActor(newX, newY, true);
+            snakeSegments.insert(snakeSegments.begin(), newHeadSegment);
+            addEntity(newHeadSegment);
+
+            for (size_t i = 1; i < snakeSegments.size(); ++i) {
+                snakeSegments[i]->setHead(false);
             }
-        }
 
-        snake.insert(snake.begin(), newHead);
-
-        if (newHead.x == food.x && newHead.y == food.y) {
             score += SCORE_PER_FOOD;
             spawnFood();
             pr32::audio::AudioEvent eatEv{};
@@ -161,7 +247,17 @@ void SnakeScene::update(unsigned long deltaTime) {
                 }
             }
         } else {
-            snake.pop_back();
+            SnakeSegmentActor* tail = snakeSegments.back();
+            snakeSegments.pop_back();
+            tail->setCellPosition(newX, newY);
+            snakeSegments.insert(snakeSegments.begin(), tail);
+
+            for (size_t i = 0; i < snakeSegments.size(); ++i) {
+                snakeSegments[i]->setHead(i == 0);
+            }
+
+            snakeSegments[0]->resetAlive();
+
             pr32::audio::AudioEvent moveEv{};
             moveEv.type = pr32::audio::WaveType::PULSE;
             moveEv.frequency = 300.0f;
@@ -169,6 +265,22 @@ void SnakeScene::update(unsigned long deltaTime) {
             moveEv.volume = 0.4f;
             moveEv.duty = 0.5f;
             audio.playEvent(moveEv);
+        }
+    }
+
+    pr32::core::Scene::update(deltaTime);
+
+    if (!gameOver && !snakeSegments.empty()) {
+        SnakeSegmentActor* headSegment = snakeSegments[0];
+        if (!headSegment->isAlive()) {
+            gameOver = true;
+            pr32::audio::AudioEvent ev{};
+            ev.type = pr32::audio::WaveType::NOISE;
+            ev.frequency = 700.0f;
+            ev.duration = 0.25f;
+            ev.volume = 0.9f;
+            ev.duty = 0.5f;
+            audio.playEvent(ev);
         }
     }
 }
@@ -182,12 +294,7 @@ void SnakeScene::draw(pr32::graphics::Renderer& renderer) {
     int fy = food.y * CELL_SIZE;
     renderer.drawFilledRectangle(fx, fy, CELL_SIZE - 1, CELL_SIZE - 1, Color::Red);
 
-    for (int i = 0; i < static_cast<int>(snake.size()); ++i) {
-        int sx = snake[i].x * CELL_SIZE;
-        int sy = snake[i].y * CELL_SIZE;
-        Color color = (i == 0) ? Color::LightGreen : Color::DarkGreen;
-        renderer.drawFilledRectangle(sx, sy, CELL_SIZE - 1, CELL_SIZE - 1, color);
-    }
+    pr32::core::Scene::draw(renderer);
 
     char scoreStr[16];
     std::snprintf(scoreStr, sizeof(scoreStr), "SCORE: %d", score);

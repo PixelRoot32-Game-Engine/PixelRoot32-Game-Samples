@@ -4,9 +4,30 @@
 
 namespace spaceinvaders {
 
+using pixelroot32::graphics::Sprite;
+using pixelroot32::graphics::MultiSprite;
+using pixelroot32::graphics::SpriteAnimationFrame;
+
+// Step-based animation tables for each alien type.
+// These tables are immutable and live in flash when possible.
+static const SpriteAnimationFrame SQUID_ANIM_FRAMES[] = {
+    { &SQUID_F1, nullptr },
+    { &SQUID_F2, nullptr }
+};
+
+static const SpriteAnimationFrame CRAB_ANIM_FRAMES[] = {
+    { nullptr, &CRAB_F1_MULTI }
+};
+
+static const SpriteAnimationFrame OCTOPUS_ANIM_FRAMES[] = {
+    { &OCTOPUS_F1, nullptr },
+    { &OCTOPUS_F2, nullptr }
+};
+
 AlienActor::AlienActor(float x, float y, AlienType type)
-    : pixelroot32::core::Actor(x, y, 0, 0), type(type), active(true), animationFrame(false) {
-    
+    : pixelroot32::core::Actor(x, y, 0, 0), type(type), active(true) {
+
+    // Configure sprite dimensions based on alien type.
     switch (type) {
         case AlienType::SQUID:
             width = ALIEN_SQUID_W;
@@ -21,6 +42,19 @@ AlienActor::AlienActor(float x, float y, AlienType type)
             height = ALIEN_OCTOPUS_H;
             break;
     }
+
+    // Bind the appropriate animation table.
+    if (type == AlienType::SQUID) {
+        animation.frames     = SQUID_ANIM_FRAMES;
+        animation.frameCount = static_cast<uint8_t>(sizeof(SQUID_ANIM_FRAMES) / sizeof(SpriteAnimationFrame));
+    } else if (type == AlienType::CRAB) {
+        animation.frames     = CRAB_ANIM_FRAMES;
+        animation.frameCount = static_cast<uint8_t>(sizeof(CRAB_ANIM_FRAMES) / sizeof(SpriteAnimationFrame));
+    } else {
+        animation.frames     = OCTOPUS_ANIM_FRAMES;
+        animation.frameCount = static_cast<uint8_t>(sizeof(OCTOPUS_ANIM_FRAMES) / sizeof(SpriteAnimationFrame));
+    }
+    animation.reset();
 }
 
 void AlienActor::update(unsigned long deltaTime) {
@@ -30,52 +64,28 @@ void AlienActor::update(unsigned long deltaTime) {
 void AlienActor::move(float dx, float dy) {
     x += dx;
     y += dy;
-    animationFrame = !animationFrame;
+    // Step-based animation: advance one frame per logical movement step.
+    animation.step();
 }
 
 void AlienActor::draw(pixelroot32::graphics::Renderer& renderer) {
     if (!active) return;
     
-    using Color = pixelroot32::graphics::Color;
-    Color c = Color::Orange; // Match reference image
+    using Color       = pixelroot32::graphics::Color;
+    using Sprite      = pixelroot32::graphics::Sprite;
+    using MultiSprite = pixelroot32::graphics::MultiSprite;
 
-    const uint16_t* sprite = nullptr;
+    // Query current frame from the animation system.
+    const Sprite*      sprite      = animation.getCurrentSprite();
+    const MultiSprite* multiSprite = animation.getCurrentMultiSprite();
 
-    if (type == AlienType::SQUID) {
-        sprite = animationFrame ? SQUID_F2 : SQUID_F1;
-    } else if (type == AlienType::CRAB) {
-        sprite = animationFrame ? CRAB_F2_REAL : CRAB_F1_REAL;
-    } else {
-        sprite = animationFrame ? OCTOPUS_F2 : OCTOPUS_F1;
-    }
+    const int drawX = static_cast<int>(x);
+    const int drawY = static_cast<int>(y);
 
-    // Draw sprite pixel by pixel
-    int startX = (int)x;
-    int startY = (int)y;
-
-    for (int r = 0; r < 8; ++r) {
-        uint16_t row = sprite[r];
-        // For 8-12 width, 16 bits is enough. 
-        // We assume LSB is rightmost, so bit 0 is x + width - 1?
-        // Or we assume standard "bit 0 is 1", "bit 1 is 2".
-        // Let's iterate from width-1 down to 0 for bits 0..width-1
-        
-        // Actually, if I defined 0x0018 for SQUID (00011000), 
-        // and we want it centered or aligned left.
-        // Let's iterate from 0 to width-1.
-        // If we treat 0x8000 as left, we shift left.
-        // But my hex values: 0x0018. 
-        // 0001 1000. 
-        // If width is 8.
-        // Bit 4 and 3 are set. (0-indexed).
-        // Let's iterate bit `b` from 0 to width-1.
-        // If `row & (1 << b)` is set, draw pixel at `x + (width - 1 - b)`.
-        
-        for (int b = 0; b < width; ++b) {
-             if (row & (1 << b)) {
-                 renderer.drawFilledRectangle(startX + (width - 1 - b), startY + r, 1, 1, c);
-             }
-        }
+    if (multiSprite) {
+        renderer.drawMultiSprite(*multiSprite, drawX, drawY);
+    } else if (sprite) {
+        renderer.drawSprite(*sprite, drawX, drawY, Color::Orange);
     }
 }
 
