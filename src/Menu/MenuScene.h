@@ -15,6 +15,7 @@ private:
     pixelroot32::graphics::ui::UIButton* brickButton;
     pixelroot32::graphics::ui::UIButton* tttButton;
     pixelroot32::graphics::ui::UIButton* geometryButton;
+    pixelroot32::graphics::ui::UIButton* snakeButton;
     
     int selectedIndex = 0;
     void updateButtonStyles();

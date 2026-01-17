@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/Scene.h"
-#include "graphics/ui/UILabel.h"
 #include "Config.h"
 #include "GameConstants.h"
 
@@ -41,10 +40,9 @@ private:
     
     // Layout
     int boardXOffset;
-
-    // UI Elements
-    pixelroot32::graphics::ui::UILabel* lblStatus;
-    pixelroot32::graphics::ui::UILabel* lblInstructions;
+    char statusText[32];
+    char instructionsText[64];
+    bool instructionsVisible;
 
     // Helper methods
     void resetGame();

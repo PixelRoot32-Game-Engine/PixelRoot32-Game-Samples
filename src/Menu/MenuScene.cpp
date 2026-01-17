@@ -1,4 +1,5 @@
 #include "MenuScene.h"
+#include "MenuConstants.h"
 #include "core/Engine.h"
 #include "Config.h"
 
@@ -6,6 +7,7 @@
 #include "examples/Pong/PongScene.h"
 #include "examples/TicTacToe/TicTacToeScene.h"
 #include "examples/GeometryJump/GeometryJumpScene.h"
+#include "examples/Snake/SnakeScene.h"
 
 namespace pr32 = pixelroot32;
 
@@ -16,6 +18,7 @@ pong::PongScene pongScene;
 brickbreaker::BrickBreakerScene brickScene;
 tictactoe::TicTacToeScene tttScene;
 geometryjump::GeometryJumpScene geometryScene;
+snake::SnakeScene snakeScene;
 
 using Color = pr32::graphics::Color;
 
@@ -26,45 +29,50 @@ void MenuScene::init() {
     float cx = screenWidth / 2;
     
     // Title
-    titleLabel = new pr32::graphics::ui::UILabel("GAME SELECT", 0, 30, Color::White, 2); 
+    titleLabel = new pr32::graphics::ui::UILabel("GAME SELECT", 0, menu::TITLE_Y, Color::White, menu::TITLE_FONT_SIZE); 
     titleLabel->centerX(screenWidth);
     addEntity(titleLabel);
 
     // Buttons
-    float btnW = 120;
-    float btnH = 25; // Restoring height for better look
+    float btnW = menu::BTN_WIDTH;
+    float btnH = menu::BTN_HEIGHT;
     float btnX = cx - (btnW / 2.0f);
-    float startY = 80;
-    float gap = 0;
+    float startY = menu::BTN_START_Y;
+    float gap = menu::BTN_GAP;
 
     // Use index 4 (Space/Action) for the activation button
-    pongButton = new pr32::graphics::ui::UIButton("PONG", 0, btnX, startY, btnW, btnH, []() {
+    pongButton = new pr32::graphics::ui::UIButton("PONG", menu::BTN_SELECT, btnX, startY, btnW, btnH, []() {
         engine.setScene(&pongScene);
     });
     addEntity(pongButton);
 
-    brickButton = new pr32::graphics::ui::UIButton("BRICKBREAK", 0, btnX, startY + btnH + gap, btnW, btnH, []() {
+    brickButton = new pr32::graphics::ui::UIButton("BRICKBREAK", menu::BTN_SELECT, btnX, startY + btnH + gap, btnW, btnH, []() {
         engine.setScene(&brickScene);
     });
     addEntity(brickButton);
 
-    tttButton = new pr32::graphics::ui::UIButton("TIC TAC TOE", 0, btnX, startY + 2*btnH + gap, btnW, btnH, []() {
+    tttButton = new pr32::graphics::ui::UIButton("TIC TAC TOE", menu::BTN_SELECT, btnX, startY + 2*btnH + gap, btnW, btnH, []() {
         engine.setScene(&tttScene);
     });
     addEntity(tttButton);
 
-    geometryButton = new pr32::graphics::ui::UIButton("GEOMETRY JUMP", 0, btnX, startY + 3*btnH + gap, btnW, btnH, []() {
+    geometryButton = new pr32::graphics::ui::UIButton("GEOMETRY JUMP", menu::BTN_SELECT, btnX, startY + 3*btnH + gap, btnW, btnH, []() {
         engine.setScene(&geometryScene);
     });
     addEntity(geometryButton);
 
+    snakeButton = new pr32::graphics::ui::UIButton("SNAKE", menu::BTN_SELECT, btnX, startY + 4*btnH + gap, btnW, btnH, []() {
+        engine.setScene(&snakeScene);
+    });
+    addEntity(snakeButton);
+
     // Footer - Instructions
     // Cyan color for footer
-    lblNavigate = new pr32::graphics::ui::UILabel("UP/DOWN: Navigate", 0, screenHeight - 40, Color::Cyan, 1);
+    lblNavigate = new pr32::graphics::ui::UILabel("UP/DOWN: Navigate", 0, screenHeight - menu::NAV_INSTR_Y_OFFSET, Color::Cyan, menu::INSTRUCTION_FONT_SIZE);
     lblNavigate->centerX(screenWidth);
     addEntity(lblNavigate);
 
-    lblSelect = new pr32::graphics::ui::UILabel("A: Select", 0, screenHeight - 25, Color::Cyan, 1);
+    lblSelect = new pr32::graphics::ui::UILabel("A: Select", 0, screenHeight - menu::SEL_INSTR_Y_OFFSET, Color::Cyan, menu::INSTRUCTION_FONT_SIZE);
     lblSelect->centerX(screenWidth);
     addEntity(lblSelect);
 
@@ -81,46 +89,46 @@ void MenuScene::update(unsigned long deltaTime) {
     auto& input = engine.getInputManager();
 
     // Sound test
-    if (input.isButtonPressed(4)) { // Space / A
+    if (input.isButtonPressed(menu::BTN_SELECT)) { // Space / A
         // Play simple blip
         pr32::audio::AudioEvent ev;
         ev.type = pr32::audio::WaveType::PULSE;
-        ev.frequency = 440.0f;
-        ev.duration = 0.1f;
-        ev.volume = 0.5f;
+        ev.frequency = menu::SOUND_BLIP_FREQ;
+        ev.duration = menu::SOUND_BLIP_DUR;
+        ev.volume = menu::SOUND_VOL_BLIP;
         ev.duty = 0.5f;
         engine.getAudioEngine().playEvent(ev);
     }
 
     // Workaround for multiple triggers: Use isButtonDown + local state to detect rising edge
-    bool isUp = input.isButtonDown(0);
+    bool isUp = input.isButtonDown(menu::BTN_NAV_UP);
     if (isUp && !wasUpPressed) { // UP Rising Edge
         selectedIndex--;
-        if (selectedIndex < 0) selectedIndex = 3;
-      updateButtonStyles();
-      
+        if (selectedIndex < 0) selectedIndex = menu::GAME_COUNT - 1;
+        updateButtonStyles();
+        
         // Navigation sound
         pr32::audio::AudioEvent ev;
         ev.type = pr32::audio::WaveType::TRIANGLE;
-        ev.frequency = 880.0f;
-        ev.duration = 0.05f;
-        ev.volume = 0.3f;
+        ev.frequency = menu::SOUND_NAV_FREQ;
+        ev.duration = menu::SOUND_NAV_DUR;
+        ev.volume = menu::SOUND_VOL_NAV;
         engine.getAudioEngine().playEvent(ev);
     }
     wasUpPressed = isUp;
 
-    bool isDown = input.isButtonDown(1);
+    bool isDown = input.isButtonDown(menu::BTN_NAV_DOWN);
     if (isDown && !wasDownPressed) { // DOWN Rising Edge
         selectedIndex++;
-        if (selectedIndex > 3) selectedIndex = 0;
-      updateButtonStyles();
+        if (selectedIndex >= menu::GAME_COUNT) selectedIndex = 0;
+        updateButtonStyles();
 
         // Navigation sound
         pr32::audio::AudioEvent ev;
         ev.type = pr32::audio::WaveType::TRIANGLE;
-        ev.frequency = 880.0f;
-        ev.duration = 0.05f;
-        ev.volume = 0.3f;
+        ev.frequency = menu::SOUND_NAV_FREQ;
+        ev.duration = menu::SOUND_NAV_DUR;
+        ev.volume = menu::SOUND_VOL_NAV;
         engine.getAudioEngine().playEvent(ev);
     }
     wasDownPressed = isDown;
@@ -132,6 +140,7 @@ void MenuScene::update(unsigned long deltaTime) {
     brickButton->handleInput(input);
     tttButton->handleInput(input);
     geometryButton->handleInput(input);
+    snakeButton->handleInput(input);
 }
 
 void MenuScene::updateButtonStyles() {
@@ -149,6 +158,9 @@ void MenuScene::updateButtonStyles() {
 
     geometryButton->setSelected(selectedIndex == 3);
     geometryButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 3));
+
+    snakeButton->setSelected(selectedIndex == 4);
+    snakeButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 4));
 }
 
 void MenuScene::draw(pixelroot32::graphics::Renderer& renderer) {

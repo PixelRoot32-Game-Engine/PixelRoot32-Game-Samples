@@ -1,5 +1,7 @@
 #include "TicTacToeScene.h"
 #include "core/Engine.h"
+#include "audio/AudioTypes.h"
+#include "audio/AudioMusicTypes.h"
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
@@ -12,7 +14,41 @@ extern pr32::core::Engine engine;
 namespace tictactoe {
 
 using Color = pr32::graphics::Color;
+using namespace pr32::audio;
 static constexpr float kDefaultAiErrorChance = 0.25f;
+
+static const MusicNote BG_MELODY[] = {
+    makeNote(INSTR_TRIANGLE_PAD, Note::C, 0.6f),
+    makeNote(INSTR_TRIANGLE_PAD, Note::G, 0.6f),
+    makeNote(INSTR_TRIANGLE_PAD, Note::E, 0.6f),
+    makeRest(0.3f),
+    makeNote(INSTR_TRIANGLE_PAD, Note::D, 0.6f),
+    makeNote(INSTR_TRIANGLE_PAD, Note::A, 0.6f),
+    makeNote(INSTR_TRIANGLE_PAD, Note::F, 0.6f),
+    makeRest(0.4f)
+};
+
+static const MusicTrack BG_MUSIC = {
+    BG_MELODY,
+    sizeof(BG_MELODY) / sizeof(MusicNote),
+    true,
+    WaveType::TRIANGLE,
+    0.5f
+};
+
+static const MusicNote WIN_MELODY[] = {
+    makeNote(INSTR_PULSE_LEAD, Note::C, 0.18f),
+    makeNote(INSTR_PULSE_LEAD, Note::E, 0.18f),
+    makeNote(INSTR_PULSE_LEAD, Note::G, 0.30f)
+};
+
+static const MusicTrack WIN_MUSIC = {
+    WIN_MELODY,
+    sizeof(WIN_MELODY) / sizeof(MusicNote),
+    false,
+    WaveType::PULSE,
+    0.5f
+};
 
 void TicTacToeScene::init() {
     int screenWidth = engine.getRenderer().getWidth();
@@ -20,17 +56,13 @@ void TicTacToeScene::init() {
     int boardPixelWidth = BOARD_SIZE * CELL_SIZE;
     boardXOffset = (screenWidth - boardPixelWidth) / 2;
 
-    // Initialize UI
-    lblStatus = new pr32::graphics::ui::UILabel("Player X Turn", 0, 10, Color::White, 1);
-    lblStatus->centerX(screenWidth);
-    
-    lblInstructions = new pr32::graphics::ui::UILabel("LEFT/RIGHT: Move | A: Select", 0, DISPLAY_HEIGHT - 20, Color::LightGray, 1);
-    lblInstructions->centerX(screenWidth);
-
-    addEntity(lblStatus);
-    addEntity(lblInstructions);
+    std::snprintf(statusText, sizeof(statusText), "Player X Turn");
+    std::snprintf(instructionsText, sizeof(instructionsText), "LEFT/RIGHT: Move | A: Select");
+    instructionsVisible = true;
 
     resetGame();
+
+    engine.getMusicPlayer().play(BG_MUSIC);
 
     static bool seeded = false;
     if (!seeded) {
@@ -54,8 +86,9 @@ void TicTacToeScene::resetGame() {
     cursorIndex = 4; // Start in middle (1, 1)
     gameOver = false;
     gameEndTime = 0;
-    lblStatus->setText("Player X Turn");
-    lblInstructions->setVisible(true);
+    std::snprintf(statusText, sizeof(statusText), "Player X Turn");
+    std::snprintf(instructionsText, sizeof(instructionsText), "LEFT/RIGHT: Move | A: Select");
+    instructionsVisible = true;
 }
 
 void TicTacToeScene::update(unsigned long deltaTime) {
@@ -65,12 +98,14 @@ void TicTacToeScene::update(unsigned long deltaTime) {
 
 void TicTacToeScene::handleInput() {
     auto& input = engine.getInputManager();
+    auto& audio = engine.getAudioEngine();
 
     if (gameOver) {
         if (millis() - gameEndTime < 500) {
             return;
         }
         if (input.isButtonPressed(BTN_SELECT)) {
+            engine.getMusicPlayer().play(BG_MUSIC);
             resetGame();
         }
         return;
@@ -114,6 +149,13 @@ void TicTacToeScene::handleInput() {
 
         if (board[row][col] == Player::None) {
             board[row][col] = humanPlayer;
+            pr32::audio::AudioEvent placeEv{};
+            placeEv.type = pr32::audio::WaveType::PULSE;
+            placeEv.frequency = 900.0f;
+            placeEv.duration = 0.08f;
+            placeEv.volume = 0.6f;
+            placeEv.duty = 0.5f;
+            audio.playEvent(placeEv);
             checkWinCondition();
             if (!gameOver) {
                 currentPlayer = aiPlayer;
@@ -126,11 +168,20 @@ void TicTacToeScene::handleInput() {
 void TicTacToeScene::performAIMove() {
     int row = -1;
     int col = -1;
+    auto& audio = engine.getAudioEngine();
+
     if (!computeAIMove(row, col)) {
         currentPlayer = humanPlayer;
         return;
     }
     board[row][col] = aiPlayer;
+    pr32::audio::AudioEvent placeEv{};
+    placeEv.type = pr32::audio::WaveType::PULSE;
+    placeEv.frequency = 750.0f;
+    placeEv.duration = 0.08f;
+    placeEv.volume = 0.5f;
+    placeEv.duty = 0.5f;
+    audio.playEvent(placeEv);
     checkWinCondition();
     if (!gameOver) {
         currentPlayer = humanPlayer;
@@ -265,23 +316,20 @@ bool TicTacToeScene::computeAIMove(int& outRow, int& outCol) {
 void TicTacToeScene::nextTurn() {
     currentPlayer = (currentPlayer == Player::X) ? Player::O : Player::X;
     if (currentPlayer == Player::X) {
-        lblStatus->setText("Player X Turn");
+        std::snprintf(statusText, sizeof(statusText), "Player X Turn");
     } else {
-        lblStatus->setText("Player O Turn");
+        std::snprintf(statusText, sizeof(statusText), "Player O Turn");
     }
 }
 
 void TicTacToeScene::checkWinCondition() {
-    // Check Rows, Cols, Diagonals
     bool won = false;
     Player winner = Player::None;
 
-    // Helper lambda to check 3 cells
     auto check3 = [&](Player p1, Player p2, Player p3) {
         return (p1 != Player::None && p1 == p2 && p2 == p3);
     };
 
-    // Rows & Cols
     for (int i = 0; i < 3; ++i) {
         if (check3(board[i][0], board[i][1], board[i][2])) {
             won = true; winner = board[i][0];
@@ -300,19 +348,52 @@ void TicTacToeScene::checkWinCondition() {
     }
 
     if (won) {
+        auto& audio = engine.getAudioEngine();
         gameOver = true;
         gameEndTime = millis();
         gameState = (winner == Player::X) ? GameState::WinX : GameState::WinO;
-        char buf[32];
-        snprintf(buf, sizeof(buf), "WINNER: PLAYER %c!", (winner == Player::X) ? 'X' : 'O');
-        lblStatus->setText(buf);
-        lblInstructions->setText("Press A to Reset");
+
+        if (winner == humanPlayer) {
+            char buf[32];
+            std::snprintf(buf, sizeof(buf), "WINNER: PLAYER %c!", (winner == Player::X) ? 'X' : 'O');
+            std::snprintf(statusText, sizeof(statusText), "%s", buf);
+        } else {
+            std::snprintf(statusText, sizeof(statusText), "YOU LOSE");
+        }
+
+        std::snprintf(instructionsText, sizeof(instructionsText), "Press A to Reset");
+        instructionsVisible = true;
+
+        engine.getMusicPlayer().stop();
+        if (winner == humanPlayer) {
+            engine.getMusicPlayer().play(WIN_MUSIC);
+        } else {
+            pr32::audio::AudioEvent loseEv{};
+            loseEv.type = pr32::audio::WaveType::NOISE;
+            loseEv.frequency = 600.0f;
+            loseEv.duration = 0.4f;
+            loseEv.volume = 0.7f;
+            loseEv.duty = 0.5f;
+            audio.playEvent(loseEv);
+        }
     } else if (isBoardFull()) {
+        auto& audio = engine.getAudioEngine();
         gameOver = true;
         gameEndTime = millis();
         gameState = GameState::Draw;
-        lblStatus->setText("DRAW GAME!");
-        lblInstructions->setText("Press A to Reset");
+        std::snprintf(statusText, sizeof(statusText), "DRAW GAME!");
+        std::snprintf(instructionsText, sizeof(instructionsText), "Press A to Reset");
+        instructionsVisible = true;
+
+        engine.getMusicPlayer().stop();
+
+        pr32::audio::AudioEvent loseEv{};
+        loseEv.type = pr32::audio::WaveType::NOISE;
+        loseEv.frequency = 600.0f;
+        loseEv.duration = 0.4f;
+        loseEv.volume = 0.7f;
+        loseEv.duty = 0.5f;
+        audio.playEvent(loseEv);
     }
 }
 
@@ -324,11 +405,15 @@ bool TicTacToeScene::isBoardFull() {
 }
 
 void TicTacToeScene::draw(pr32::graphics::Renderer& renderer) {
+    renderer.drawTextCentered(statusText, 10, Color::White, 1);
+    if (instructionsVisible) {
+        renderer.drawTextCentered(instructionsText, DISPLAY_HEIGHT - 20, Color::LightGray, 1);
+    }
+
     drawGrid(renderer);
     drawMarks(renderer);
     drawCursor(renderer);
 
-    // Draw UI elements via base class
     Scene::draw(renderer);
 }
 
