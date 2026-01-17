@@ -1,0 +1,3 @@
+[submodule "lib/PixelRoot32-Game-Engine"]
+	path = lib/PixelRoot32-Game-Engine
+	url = git@github.com:Gperez88/PixelRoot32-Game-Engine.git
