@@ -49,10 +49,10 @@ namespace spaceinvaders {
     constexpr float ALIEN_START_Y = 40.0f;
 
     // Movement (Stepping)
-    constexpr unsigned long INITIAL_STEP_DELAY = 220; // ms (start a bit slower)
-    constexpr unsigned long MIN_STEP_DELAY = 70;      // ms (fastest speed)
+    constexpr unsigned long INITIAL_STEP_DELAY = 260; // ms (start a bit slower)
+    constexpr unsigned long MIN_STEP_DELAY = 90;      // ms (fastest speed)
     constexpr float ALIEN_DROP_AMOUNT = 8.0f;
-    constexpr float ALIEN_STEP_AMOUNT_X = 4.0f;
+    constexpr float ALIEN_STEP_AMOUNT_X = 3.0f;
 
     // Physics / Collision Layers (using engine's CollisionTypes.h patterns)
     // We will define these usage in the Actors, but good to know:

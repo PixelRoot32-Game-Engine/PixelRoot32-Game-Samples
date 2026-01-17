@@ -7,6 +7,21 @@ extern pr32::core::Engine engine;
 
 namespace spaceinvaders {
 
+using Sprite = pr32::graphics::Sprite;
+
+static const uint16_t PLAYER_SHIP_BITS[] = {
+    0x0020,
+    0x0070,
+    0x00F8,
+    0x01FC,
+    0x03DE,
+    0x03FE,
+    0x0124,
+    0x0124
+};
+
+static const Sprite PLAYER_SHIP_SPRITE = { PLAYER_SHIP_BITS, PLAYER_WIDTH, PLAYER_HEIGHT };
+
 PlayerActor::PlayerActor(float x, float y)
     : PhysicsActor(x, y, PLAYER_WIDTH, PLAYER_HEIGHT), isAlive(true) {
     setWorldSize(LOGICAL_WIDTH, LOGICAL_HEIGHT);
@@ -34,10 +49,11 @@ void PlayerActor::handleInput() {
 void PlayerActor::draw(pr32::graphics::Renderer& renderer) {
     if (!isAlive) return;
     
-    // Simple green cannon
     using Color = pr32::graphics::Color;
-    renderer.drawFilledRectangle((int)x, (int)y + 4, (int)width, 4, Color::Green); // Base
-    renderer.drawFilledRectangle((int)x + 4, (int)y, 3, 4, Color::Green); // Turret
+    renderer.drawSprite(PLAYER_SHIP_SPRITE,
+                        static_cast<int>(x),
+                        static_cast<int>(y),
+                        Color::White);
 }
 
 pr32::core::Rect PlayerActor::getHitBox() {

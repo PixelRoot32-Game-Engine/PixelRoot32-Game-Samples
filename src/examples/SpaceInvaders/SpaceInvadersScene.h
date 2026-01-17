@@ -80,6 +80,11 @@ namespace spaceinvaders {
         ExplosionAnimation playerExplosion;
         bool isPaused;
 
+        bool fireInputReady;
+
+        // Background music tempo state
+        float currentMusicTempoFactor;
+
         void updateAliens(unsigned long deltaTime);
         void handleCollisions();
         void enemyShoot();
@@ -94,6 +99,9 @@ namespace spaceinvaders {
         // Player hit and respawn workflow
         void handlePlayerHit();
         void respawnPlayerUnderBunker();
+
+        // Music helpers
+        void updateMusicTempo();
     };
 
 }

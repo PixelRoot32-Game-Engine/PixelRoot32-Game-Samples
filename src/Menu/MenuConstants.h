@@ -12,13 +12,14 @@ namespace menu {
     constexpr float BTN_WIDTH = 120.0f;
     constexpr float BTN_HEIGHT = 25.0f;
     constexpr float BTN_START_Y = 80.0f;
-    constexpr float BTN_GAP = 0.0f;
+    constexpr float BTN_GAP = 6.0f;
     
     constexpr int TITLE_Y = 30;
     constexpr int NAV_INSTR_Y_OFFSET = 40; // From bottom
     constexpr int SEL_INSTR_Y_OFFSET = 25; // From bottom
 
     // Font Sizes
+    constexpr int BTN_FONT_SIZE = 1;
     constexpr int TITLE_FONT_SIZE = 2;
     constexpr int INSTRUCTION_FONT_SIZE = 1;
 
@@ -30,5 +31,5 @@ namespace menu {
     constexpr float SOUND_VOL_BLIP = 0.5f;
     constexpr float SOUND_VOL_NAV = 0.3f;
 
-    constexpr int GAME_COUNT = 6;
+    constexpr int GAME_COUNT = 4;
 }

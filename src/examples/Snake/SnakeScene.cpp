@@ -116,7 +116,7 @@ void SnakeScene::resetGame() {
     int centerX = GRID_WIDTH / 2;
     int centerY = GRID_HEIGHT / 2;
 
-    const int initialLength = 12;
+    const int initialLength = 4;
     for (int i = 0; i < initialLength; ++i) {
         int x = centerX - i;
         int y = centerY;

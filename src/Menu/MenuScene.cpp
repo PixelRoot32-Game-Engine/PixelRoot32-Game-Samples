@@ -53,24 +53,26 @@ void MenuScene::init() {
     // });
     // addEntity(brickButton);
 
-    tttButton = new pr32::graphics::ui::UIButton("TIC TAC TOE", menu::BTN_SELECT, btnX, startY + gap, btnW, btnH, []() {
+    float stepY = btnH + gap;
+
+    tttButton = new pr32::graphics::ui::UIButton("TIC TAC TOE", menu::BTN_SELECT, btnX, startY, btnW, btnH, []() {
         engine.setScene(&tttScene);
-    });
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
     addEntity(tttButton);
 
-    geometryButton = new pr32::graphics::ui::UIButton("GEOMETRY JUMP", menu::BTN_SELECT, btnX, startY + btnH + gap, btnW, btnH, []() {
+    geometryButton = new pr32::graphics::ui::UIButton("GEOMETRY JUMP", menu::BTN_SELECT, btnX, startY + stepY, btnW, btnH, []() {
         engine.setScene(&geometryScene);
-    });
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
     addEntity(geometryButton);
 
-    snakeButton = new pr32::graphics::ui::UIButton("SNAKE", menu::BTN_SELECT, btnX, startY + 1*btnH + gap, btnW, btnH, []() {
+    snakeButton = new pr32::graphics::ui::UIButton("SNAKE", menu::BTN_SELECT, btnX, startY + 2*stepY, btnW, btnH, []() {
         engine.setScene(&snakeScene);
-    });
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
     addEntity(snakeButton);
 
-    spaceInvadersButton = new pr32::graphics::ui::UIButton("SPACE INVADERS", menu::BTN_SELECT, btnX, startY + 2*btnH + gap, btnW, btnH, []() {
+    spaceInvadersButton = new pr32::graphics::ui::UIButton("SPACE INVADERS", menu::BTN_SELECT, btnX, startY + 3*stepY, btnW, btnH, []() {
         engine.setScene(&spaceInvadersScene);
-    });
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
     addEntity(spaceInvadersButton);
 
     // Footer - Instructions
@@ -83,10 +85,21 @@ void MenuScene::init() {
     lblSelect->centerX(screenWidth);
     addEntity(lblSelect);
 
+    tttButton->setSelected(false);
+    tttButton->setStyle(Color::White, Color::Cyan, false);
+
+    geometryButton->setSelected(false);
+    geometryButton->setStyle(Color::White, Color::Cyan, false);
+
+    snakeButton->setSelected(false);
+    snakeButton->setStyle(Color::White, Color::Cyan, false);
+
+    spaceInvadersButton->setSelected(false);
+    spaceInvadersButton->setStyle(Color::White, Color::Cyan, false);
+
     selectedIndex = 0;
     wasUpPressed = false;
     wasDownPressed = false;
-    //updateButtonStyles();
 }
 
 void MenuScene::update(unsigned long deltaTime) {
@@ -161,17 +174,17 @@ void MenuScene::updateButtonStyles() {
     // brickButton->setSelected(selectedIndex == 1);
     // brickButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 1));
 
-    tttButton->setSelected(selectedIndex == 2);
-    tttButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 2));
+    tttButton->setSelected(selectedIndex == 0);
+    tttButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 0));
 
-    geometryButton->setSelected(selectedIndex == 3);
-    geometryButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 3));
+    geometryButton->setSelected(selectedIndex == 1);
+    geometryButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 1));
 
-    snakeButton->setSelected(selectedIndex == 4);
-    snakeButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 4));
+    snakeButton->setSelected(selectedIndex == 2);
+    snakeButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 2));
 
-    spaceInvadersButton->setSelected(selectedIndex == 5);
-    spaceInvadersButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 5));
+    spaceInvadersButton->setSelected(selectedIndex == 3);
+    spaceInvadersButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 3));
 }
 
 void MenuScene::draw(pixelroot32::graphics::Renderer& renderer) {

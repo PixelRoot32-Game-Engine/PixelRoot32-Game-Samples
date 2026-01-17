@@ -5,6 +5,8 @@
 #include "BunkerActor.h"
 #include "GameConstants.h"
 #include "core/Engine.h"
+#include "audio/AudioTypes.h"
+#include "audio/AudioMusicTypes.h"
 #include <cstdlib>
 #include <cstdio>
 
@@ -15,6 +17,73 @@ namespace spaceinvaders {
 
 using pixelroot32::graphics::Sprite;
 using pixelroot32::graphics::SpriteAnimationFrame;
+using pixelroot32::audio::AudioEvent;
+using pixelroot32::audio::WaveType;
+using pixelroot32::audio::MusicNote;
+using pixelroot32::audio::MusicTrack;
+using pixelroot32::audio::InstrumentPreset;
+using pixelroot32::audio::INSTR_PULSE_BASS;
+using pixelroot32::audio::Note;
+
+// Base four-note bass pattern: "tu tu tu tu"
+static const InstrumentPreset BASS_INSTRUMENT = INSTR_PULSE_BASS;
+
+static const MusicNote BGM_SLOW_NOTES[] = {
+    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::C, 0.18f),
+    pixelroot32::audio::makeRest(0.10f),
+    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::C, 0.18f),
+    pixelroot32::audio::makeRest(0.10f),
+    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::C, 0.18f),
+    pixelroot32::audio::makeRest(0.10f),
+    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::C, 0.18f),
+    pixelroot32::audio::makeRest(0.10f),
+};
+
+static const MusicNote BGM_MEDIUM_NOTES[] = {
+    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::C, 0.12f),
+    pixelroot32::audio::makeRest(0.06f),
+    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::C, 0.12f),
+    pixelroot32::audio::makeRest(0.06f),
+    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::C, 0.12f),
+    pixelroot32::audio::makeRest(0.06f),
+    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::C, 0.12f),
+    pixelroot32::audio::makeRest(0.06f),
+};
+
+static const MusicNote BGM_FAST_NOTES[] = {
+    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::C, 0.08f),
+    pixelroot32::audio::makeRest(0.04f),
+    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::C, 0.08f),
+    pixelroot32::audio::makeRest(0.04f),
+    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::C, 0.08f),
+    pixelroot32::audio::makeRest(0.04f),
+    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::C, 0.08f),
+    pixelroot32::audio::makeRest(0.04f),
+};
+
+static const MusicTrack BGM_SLOW_TRACK = {
+    BGM_SLOW_NOTES,
+    sizeof(BGM_SLOW_NOTES) / sizeof(MusicNote),
+    true,
+    WaveType::PULSE,
+    BASS_INSTRUMENT.duty
+};
+
+static const MusicTrack BGM_MEDIUM_TRACK = {
+    BGM_MEDIUM_NOTES,
+    sizeof(BGM_MEDIUM_NOTES) / sizeof(MusicNote),
+    true,
+    WaveType::PULSE,
+    BASS_INSTRUMENT.duty
+};
+
+static const MusicTrack BGM_FAST_TRACK = {
+    BGM_FAST_NOTES,
+    sizeof(BGM_FAST_NOTES) / sizeof(MusicNote),
+    true,
+    WaveType::PULSE,
+    BASS_INSTRUMENT.duty
+};
 
 // Simple 8x8 explosion sprites for the player explosion animation.
 // Frames are intentionally small and cheap to draw on ESP32.
@@ -128,7 +197,9 @@ SpaceInvadersScene::SpaceInvadersScene()
       stepTimer(0),
       stepDelay(0),
       moveDirection(1),
-      isPaused(false) {
+      isPaused(false),
+      fireInputReady(false),
+      currentMusicTempoFactor(0.0f) {
 
     // Initialize enemy explosion slots as inactive.
     for (int i = 0; i < MaxEnemyExplosions; ++i) {
@@ -145,6 +216,9 @@ SpaceInvadersScene::~SpaceInvadersScene() {
 
 void SpaceInvadersScene::init() {
     resetGame();
+
+    engine.getMusicPlayer().play(BGM_SLOW_TRACK);
+    currentMusicTempoFactor = 0.0f;
 }
 
 void SpaceInvadersScene::cleanup() {
@@ -182,6 +256,7 @@ void SpaceInvadersScene::resetGame() {
     lives = 3;
     gameOver = false;
     isPaused = false;
+    fireInputReady = false;
 
     // Clear any pending visual effects.
     for (int i = 0; i < MaxEnemyExplosions; ++i) {
@@ -233,6 +308,8 @@ void SpaceInvadersScene::update(unsigned long deltaTime) {
     if (gameOver) {
         if (engine.getInputManager().isButtonPressed(BTN_FIRE)) {
             resetGame();
+            engine.getMusicPlayer().play(BGM_SLOW_TRACK);
+            currentMusicTempoFactor = 0.0f;
         }
         return;
     }
@@ -255,7 +332,13 @@ void SpaceInvadersScene::update(unsigned long deltaTime) {
     auto& input = engine.getInputManager();
 
     if (player) {
-        if (input.isButtonPressed(BTN_FIRE)) {
+        if (!fireInputReady) {
+            if (!input.isButtonDown(BTN_FIRE)) {
+                fireInputReady = true;
+            }
+        }
+
+        if (fireInputReady && input.isButtonPressed(BTN_FIRE)) {
             bool hasPlayerBullet = false;
             for (auto* proj : projectiles) {
                 if (proj->isActive() && proj->getType() == ProjectileType::PLAYER_BULLET) {
@@ -269,6 +352,14 @@ void SpaceInvadersScene::update(unsigned long deltaTime) {
                 ProjectileActor* bullet = new ProjectileActor(px, py, ProjectileType::PLAYER_BULLET);
                 projectiles.push_back(bullet);
                 addEntity(bullet);
+
+                AudioEvent event{};
+                event.type = WaveType::PULSE;
+                event.frequency = 880.0f;
+                event.duration = 0.08f;
+                event.volume = 0.4f;
+                event.duty = 0.5f;
+                engine.getAudioEngine().playEvent(event);
             }
         }
     }
@@ -290,6 +381,8 @@ void SpaceInvadersScene::update(unsigned long deltaTime) {
 
     // Update enemy hit explosions while gameplay is running.
     updateEnemyExplosions(deltaTime);
+
+    updateMusicTempo();
 }
 
 void SpaceInvadersScene::updateAliens(unsigned long deltaTime) {
@@ -334,6 +427,20 @@ void SpaceInvadersScene::updateAliens(unsigned long deltaTime) {
         }
 
         enemyShoot();
+
+        if (!gameOver && player) {
+            for (auto* alien : aliens) {
+                if (!alien->isActive()) {
+                    continue;
+                }
+                float bottom = alien->y + alien->height;
+                if (bottom >= player->y) {
+                    lives = 0;
+                    gameOver = true;
+                    break;
+                }
+            }
+        }
     }
 }
 
@@ -353,10 +460,18 @@ void SpaceInvadersScene::handleCollisions() {
                     alien->kill();
                     score += alien->getScoreValue();
                     calculateStepDelay();
-                    // Spawn a short-lived enemy explosion effect at the impact position.
                     float ex = alien->x + alien->width * 0.5f;
                     float ey = alien->y + alien->height * 0.5f;
                     spawnEnemyExplosion(ex, ey);
+
+                    AudioEvent event{};
+                    event.type = WaveType::NOISE;
+                    event.frequency = 600.0f;
+                    event.duration = 0.12f;
+                    event.volume = 0.6f;
+                    event.duty = 0.5f;
+                    engine.getAudioEngine().playEvent(event);
+
                     break;
                 }
             }
@@ -521,6 +636,40 @@ void SpaceInvadersScene::draw(pr32::graphics::Renderer& renderer) {
     }
 }
 
+void SpaceInvadersScene::updateMusicTempo() {
+    int total = ALIEN_ROWS * ALIEN_COLS;
+    int alive = getActiveAlienCount();
+    if (alive <= 0) {
+        engine.getMusicPlayer().stop();
+        return;
+    }
+
+    float t = 1.0f - static_cast<float>(alive) / static_cast<float>(total);
+
+    float newFactor;
+    if (t < 0.33f) {
+        newFactor = 0.0f;
+    } else if (t < 0.66f) {
+        newFactor = 1.0f;
+    } else {
+        newFactor = 2.0f;
+    }
+
+    if (newFactor == currentMusicTempoFactor) {
+        return;
+    }
+
+    currentMusicTempoFactor = newFactor;
+
+    if (currentMusicTempoFactor == 0.0f) {
+        engine.getMusicPlayer().play(BGM_SLOW_TRACK);
+    } else if (currentMusicTempoFactor == 1.0f) {
+        engine.getMusicPlayer().play(BGM_MEDIUM_TRACK);
+    } else {
+        engine.getMusicPlayer().play(BGM_FAST_TRACK);
+    }
+}
+
 void SpaceInvadersScene::updateEnemyExplosions(unsigned long deltaTime) {
     for (int i = 0; i < MaxEnemyExplosions; ++i) {
         EnemyExplosion& e = enemyExplosions[i];
@@ -546,12 +695,42 @@ void SpaceInvadersScene::drawEnemyExplosions(pr32::graphics::Renderer& renderer)
             continue;
         }
 
-        // Simple, cheap visual feedback: small white cross at impact position.
         int cx = static_cast<int>(e.x);
         int cy = static_cast<int>(e.y);
 
-        renderer.drawFilledRectangle(cx - 1, cy, 3, 1, Color::White);
-        renderer.drawFilledRectangle(cx, cy - 1, 1, 3, Color::White);
+        int hx = cx - 2;
+        int hw = 5;
+        int hy = cy;
+
+        if (hx < 0) {
+            hw += hx;
+            hx = 0;
+        }
+        if (hx < LOGICAL_WIDTH && hw > 0) {
+            if (hx + hw > LOGICAL_WIDTH) {
+                hw = LOGICAL_WIDTH - hx;
+            }
+            if (hw > 0 && hy >= 0 && hy < LOGICAL_HEIGHT) {
+                renderer.drawFilledRectangle(hx, hy, hw, 1, Color::White);
+            }
+        }
+
+        int vx = cx;
+        int vy = cy - 2;
+        int vh = 5;
+
+        if (vy < 0) {
+            vh += vy;
+            vy = 0;
+        }
+        if (vy < LOGICAL_HEIGHT && vh > 0) {
+            if (vy + vh > LOGICAL_HEIGHT) {
+                vh = LOGICAL_HEIGHT - vy;
+            }
+            if (vh > 0 && vx >= 0 && vx < LOGICAL_WIDTH) {
+                renderer.drawFilledRectangle(vx, vy, 1, vh, Color::White);
+            }
+        }
     }
 }
 
@@ -573,6 +752,14 @@ void SpaceInvadersScene::handlePlayerHit() {
     if (lives > 0) {
         lives -= 1;
     }
+
+    AudioEvent event{};
+    event.type = WaveType::NOISE;
+    event.frequency = 400.0f;
+    event.duration = 0.18f;
+    event.volume = 0.7f;
+    event.duty = 0.5f;
+    engine.getAudioEngine().playEvent(event);
 
     if (lives <= 0) {
         gameOver = true;
