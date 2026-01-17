@@ -3,7 +3,6 @@
 #include "core/Engine.h"
 #include "Config.h"
 
-#include "examples/BrickBreaker/BrickBreakerScene.h"
 #include "examples/Pong/PongScene.h"
 #include "examples/TicTacToe/TicTacToeScene.h"
 #include "examples/Snake/SnakeScene.h"
@@ -14,7 +13,7 @@ namespace pr32 = pixelroot32;
 extern pr32::core::Engine engine;
 
 // Define instances here
-// pong::PongScene pongScene;
+pong::PongScene pongScene;
 // brickbreaker::BrickBreakerScene brickScene;
 tictactoe::TicTacToeScene tttScene;
 snake::SnakeScene snakeScene;
@@ -41,29 +40,24 @@ void MenuScene::init() {
     float gap = menu::BTN_GAP;
 
     // Use index 4 (Space/Action) for the activation button
-    // pongButton = new pr32::graphics::ui::UIButton("PONG", menu::BTN_SELECT, btnX, startY, btnW, btnH, []() {
-    //     engine.setScene(&pongScene);
-    // });
-    // addEntity(pongButton);
-
-    // brickButton = new pr32::graphics::ui::UIButton("BRICKBREAK", menu::BTN_SELECT, btnX, startY + btnH + gap, btnW, btnH, []() {
-    //     engine.setScene(&brickScene);
-    // });
-    // addEntity(brickButton);
+    pongButton = new pr32::graphics::ui::UIButton("PONG", menu::BTN_SELECT, btnX, startY, btnW, btnH, []() {
+        engine.setScene(&pongScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+    addEntity(pongButton);
 
     float stepY = btnH + gap;
 
-    tttButton = new pr32::graphics::ui::UIButton("TIC TAC TOE", menu::BTN_SELECT, btnX, startY, btnW, btnH, []() {
+    tttButton = new pr32::graphics::ui::UIButton("TIC TAC TOE", menu::BTN_SELECT, btnX, startY + stepY, btnW, btnH, []() {
         engine.setScene(&tttScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
     addEntity(tttButton);
 
-    snakeButton = new pr32::graphics::ui::UIButton("SNAKE", menu::BTN_SELECT, btnX, startY + stepY, btnW, btnH, []() {
+    snakeButton = new pr32::graphics::ui::UIButton("SNAKE", menu::BTN_SELECT, btnX, startY + 2*stepY, btnW, btnH, []() {
         engine.setScene(&snakeScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
     addEntity(snakeButton);
 
-    spaceInvadersButton = new pr32::graphics::ui::UIButton("SPACE INVADERS", menu::BTN_SELECT, btnX, startY + 2*stepY, btnW, btnH, []() {
+    spaceInvadersButton = new pr32::graphics::ui::UIButton("SPACE INVADERS", menu::BTN_SELECT, btnX, startY + 3*stepY, btnW, btnH, []() {
         engine.setScene(&spaceInvadersScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
     addEntity(spaceInvadersButton);
@@ -78,18 +72,10 @@ void MenuScene::init() {
     lblSelect->centerX(screenWidth);
     addEntity(lblSelect);
 
-    tttButton->setSelected(false);
-    tttButton->setStyle(Color::White, Color::Cyan, false);
-
-    snakeButton->setSelected(false);
-    snakeButton->setStyle(Color::White, Color::Cyan, false);
-
-    spaceInvadersButton->setSelected(false);
-    spaceInvadersButton->setStyle(Color::White, Color::Cyan, false);
-
-    selectedIndex = 0;
+    selectedIndex = -1;
     wasUpPressed = false;
     wasDownPressed = false;
+    updateButtonStyles();
 }
 
 void MenuScene::update(unsigned long deltaTime) {
@@ -146,8 +132,7 @@ void MenuScene::update(unsigned long deltaTime) {
     // Trigger button logic (checks for button 4 press if selected)
     // UIButton::handleInput uses isButtonPressed internally which might also have issues,
     // but let's test navigation first.
-    // pongButton->handleInput(input);
-    // brickButton->handleInput(input);
+    pongButton->handleInput(input);
     tttButton->handleInput(input);
     snakeButton->handleInput(input);
     spaceInvadersButton->handleInput(input);
@@ -157,20 +142,17 @@ void MenuScene::updateButtonStyles() {
     // Style: Selected = Cyan BG + White Text
     //        Unselected = No BG + White Text
     
-    // pongButton->setSelected(selectedIndex == 0);
-    // pongButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 0)); 
+    pongButton->setSelected(selectedIndex == 0);
+    pongButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 0)); 
 
-    // brickButton->setSelected(selectedIndex == 1);
-    // brickButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 1));
+    tttButton->setSelected(selectedIndex == 1);
+    tttButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 1));
 
-    tttButton->setSelected(selectedIndex == 0);
-    tttButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 0));
+    snakeButton->setSelected(selectedIndex == 2);
+    snakeButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 2));
 
-    snakeButton->setSelected(selectedIndex == 1);
-    snakeButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 1));
-
-    spaceInvadersButton->setSelected(selectedIndex == 2);
-    spaceInvadersButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 2));
+    spaceInvadersButton->setSelected(selectedIndex == 3);
+    spaceInvadersButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 3));
 }
 
 void MenuScene::draw(pixelroot32::graphics::Renderer& renderer) {

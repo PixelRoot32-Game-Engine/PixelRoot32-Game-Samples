@@ -2,7 +2,6 @@
 #include "core/Scene.h"
 #include "PaddleActor.h"
 #include "BallActor.h"
-#include "graphics/ui/UILabel.h"
 #include "graphics/Color.h"
 #include "Config.h"
 #include "GameConstants.h"
@@ -19,10 +18,6 @@ public:
     float getBallY() { return ball->y; }
 
 private:
-    pixelroot32::graphics::ui::UILabel* lblScore;
-    pixelroot32::graphics::ui::UILabel* lblStartMessage;
-    pixelroot32::graphics::ui::UILabel* lblGameOver;
-
     PaddleActor* leftPaddle;
     PaddleActor* rightPaddle;
     BallActor* ball;

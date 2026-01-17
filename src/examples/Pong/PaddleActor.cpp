@@ -58,7 +58,7 @@ void PaddleActor::update(unsigned long deltaTime) {
 }
 
 void PaddleActor::draw(pr32::graphics::Renderer& renderer) {
-    renderer.drawFilledRectangle((int)x, (int)y, width, height, Color::White);
+    renderer.drawFilledRectangle((int)x, (int)y, width, height, color);
 }
 
 void PaddleActor::onCollision(pr32::core::Actor* other) {

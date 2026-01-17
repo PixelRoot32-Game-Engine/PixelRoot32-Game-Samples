@@ -1,8 +1,11 @@
 #include "BallActor.h"
 #include "core/Engine.h"
+#include "audio/AudioTypes.h"
 #include <cstdlib>
 #include <cmath>
 #include <Config.h>
+
+extern pixelroot32::core::Engine engine;
 
 namespace pong {
 
@@ -72,6 +75,15 @@ void BallActor::onCollision(pr32::core::Actor* other) {
 
     float impactPos = (y - other->y) / other->height - 0.5f;
     vy += impactPos * 50.0f;
+
+    // Play bounce sound
+    pr32::audio::AudioEvent bounceEv{};
+    bounceEv.type = pr32::audio::WaveType::PULSE; // Changed from SQUARE
+    bounceEv.frequency = 600.0f + (std::rand() % 100); // Slight variation
+    bounceEv.duration = 0.05f;
+    bounceEv.volume = 0.6f;
+    bounceEv.duty = 0.5f;
+    engine.getAudioEngine().playEvent(bounceEv);
 }
 
 }

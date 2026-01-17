@@ -1,7 +1,7 @@
 #pragma once
 #include "core/PhysicsActor.h"
 #include "GameLayers.h"
-#include <graphics/Color.h>
+#include "graphics/Color.h"
 
 namespace pong {
 class BallActor : public pixelroot32::core::PhysicsActor {

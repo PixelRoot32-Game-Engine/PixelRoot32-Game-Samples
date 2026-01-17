@@ -9,9 +9,10 @@ public:
     float velocity;      // for player movement
     float accumulator;   // for AI movement
     bool isAI;
+    pixelroot32::graphics::Color color;
 
-    PaddleActor(float x, float y, int w, int h, bool ai = false)
-        : pixelroot32::core::Actor(x, y, w, h), velocity(0), accumulator(0), isAI(ai) {
+    PaddleActor(float x, float y, int w, int h, bool ai = false, pixelroot32::graphics::Color c = pixelroot32::graphics::Color::White)
+        : pixelroot32::core::Actor(x, y, w, h), velocity(0), accumulator(0), isAI(ai), color(c) {
         
         this->setCollisionLayer(Layers::PADDLE);
         this->setCollisionMask(Layers::BALL);
