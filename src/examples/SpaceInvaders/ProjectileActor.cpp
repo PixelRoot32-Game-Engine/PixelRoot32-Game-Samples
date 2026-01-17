@@ -36,6 +36,8 @@ pixelroot32::core::Rect ProjectileActor::getHitBox() {
 }
 
 void ProjectileActor::onCollision(pixelroot32::core::Actor* other) {
+    (void)other;
+
     // Basic collision handling, deactivate self
     // Logic for destroying other entity should be handled in Scene or via callbacks
     active = false; 
