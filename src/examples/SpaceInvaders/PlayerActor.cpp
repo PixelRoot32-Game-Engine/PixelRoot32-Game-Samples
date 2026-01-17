@@ -46,6 +46,16 @@ void PlayerActor::handleInput() {
     }
 }
 
+bool PlayerActor::isFireDown() const {
+    auto& input = engine.getInputManager();
+    return input.isButtonDown(BTN_FIRE);
+}
+
+bool PlayerActor::wantsToShoot() const {
+    auto& input = engine.getInputManager();
+    return input.isButtonPressed(BTN_FIRE);
+}
+
 void PlayerActor::draw(pr32::graphics::Renderer& renderer) {
     if (!isAlive) return;
     

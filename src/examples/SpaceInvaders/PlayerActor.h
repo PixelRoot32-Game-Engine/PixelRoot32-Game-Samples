@@ -14,6 +14,9 @@ public:
     pixelroot32::core::Rect getHitBox() override;
     void onCollision(pixelroot32::core::Actor* other) override;
 
+    bool isFireDown() const;
+    bool wantsToShoot() const;
+
 private:
     void handleInput();
     bool isAlive;

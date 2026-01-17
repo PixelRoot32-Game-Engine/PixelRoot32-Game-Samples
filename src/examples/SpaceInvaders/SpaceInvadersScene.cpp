@@ -329,16 +329,14 @@ void SpaceInvadersScene::update(unsigned long deltaTime) {
 
     Scene::update(deltaTime);
 
-    auto& input = engine.getInputManager();
-
     if (player) {
         if (!fireInputReady) {
-            if (!input.isButtonDown(BTN_FIRE)) {
+            if (!player->isFireDown()) {
                 fireInputReady = true;
             }
         }
 
-        if (fireInputReady && input.isButtonPressed(BTN_FIRE)) {
+        if (fireInputReady && player->wantsToShoot()) {
             bool hasPlayerBullet = false;
             for (auto* proj : projectiles) {
                 if (proj->isActive() && proj->getType() == ProjectileType::PLAYER_BULLET) {
