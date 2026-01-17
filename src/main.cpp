@@ -19,6 +19,15 @@ const int I2S_DOUT = 22;
 // Audio Pin Configuration (DAC)
 const int DAC_PIN = 25; // GPIO 25 or 26
 
+// Button Mapping (Arduino ESP32)
+// Common mapping for 5-directional pad and A button
+const int BTN_UP = 13;
+const int BTN_DOWN = 12;
+const int BTN_LEFT = 14;
+const int BTN_RIGHT = 32;
+const int BTN_A = 33;
+const int BTN_B = 34;
+
 pr32::drivers::esp32::TFT_eSPI_Drawer drawer;
 
 // Select Audio Backend
@@ -30,7 +39,7 @@ pr32::drivers::esp32::ESP32_DAC_AudioBackend audioBackend(DAC_PIN, 11025); // Lo
 
 pr32::graphics::DisplayConfig config(&drawer, DISPLAY_ROTATION, DISPLAY_HEIGHT, DISPLAY_WIDTH);
 
-pr32::input::InputConfig inputConfig(5, 13, 12, 14, 32, 33); // 5 buttons: Up, Down, Left, Right, Space
+pr32::input::InputConfig inputConfig(6, BTN_UP, BTN_DOWN, BTN_LEFT, BTN_RIGHT, BTN_A, BTN_B); // 6 buttons: Up, Down, Left, Right, A, B
 
 pr32::audio::AudioConfig audioConfig(&audioBackend, audioBackend.getSampleRate());
 

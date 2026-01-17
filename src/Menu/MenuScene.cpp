@@ -2,21 +2,10 @@
 #include "core/Engine.h"
 #include "Config.h"
 
-// Include implementation of games directly here to compile them in this unit
-// This is necessary because the examples are not part of the standard library build path
-#include "../lib/PixelRoot32-Game-Engine/examples/BrickBreaker/BallActor.cpp"
-#include "../lib/PixelRoot32-Game-Engine/examples/BrickBreaker/PaddleActor.cpp"
-#include "../lib/PixelRoot32-Game-Engine/examples/BrickBreaker/BrickActor.cpp"
-#include "../lib/PixelRoot32-Game-Engine/examples/BrickBreaker/BrickBreakerScene.cpp"
-
-#include "../lib/PixelRoot32-Game-Engine/examples/Pong/BallActor.cpp"
-#include "../lib/PixelRoot32-Game-Engine/examples/Pong/PaddleActor.cpp"
-#include "../lib/PixelRoot32-Game-Engine/examples/Pong/PongScene.cpp"
-
-#include "../lib/PixelRoot32-Game-Engine/examples/TicTacToe/TicTacToeScene.cpp"
-#include "../lib/PixelRoot32-Game-Engine/examples/GeometryJump/PlayerActor.cpp"
-#include "../lib/PixelRoot32-Game-Engine/examples/GeometryJump/ObstacleActor.cpp"
-#include "../lib/PixelRoot32-Game-Engine/examples/GeometryJump/GeometryJumpScene.cpp"
+#include "examples/BrickBreaker/BrickBreakerScene.h"
+#include "examples/Pong/PongScene.h"
+#include "examples/TicTacToe/TicTacToeScene.h"
+#include "examples/GeometryJump/GeometryJumpScene.h"
 
 namespace pr32 = pixelroot32;
 
@@ -104,7 +93,7 @@ void MenuScene::update(unsigned long deltaTime) {
     }
 
     // Workaround for multiple triggers: Use isButtonDown + local state to detect rising edge
-    bool isUp = input.isButtonDown(2);
+    bool isUp = input.isButtonDown(0);
     if (isUp && !wasUpPressed) { // UP Rising Edge
         selectedIndex--;
         if (selectedIndex < 0) selectedIndex = 3;
