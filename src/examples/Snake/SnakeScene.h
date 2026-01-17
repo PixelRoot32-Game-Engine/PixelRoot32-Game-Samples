@@ -3,6 +3,7 @@
 #include "graphics/Renderer.h"
 #include "Config.h"
 #include "GameConstants.h"
+#include "SnakeSegmentActor.h"
 #include <vector>
 
 namespace snake {
@@ -11,8 +12,6 @@ struct Point {
     int x;
     int y;
 };
-
-class SnakeSegmentActor;
 
 enum Direction {
     DIR_UP,

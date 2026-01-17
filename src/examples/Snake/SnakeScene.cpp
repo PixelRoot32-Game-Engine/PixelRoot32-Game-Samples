@@ -1,6 +1,5 @@
 #include "SnakeScene.h"
 #include "core/Engine.h"
-#include "core/Actor.h"
 #include "audio/AudioTypes.h"
 #include <cstdio>
 #include <cstdlib>
@@ -11,82 +10,6 @@ namespace pr32 = pixelroot32;
 extern pr32::core::Engine engine;
 
 namespace snake {
-
-using CollisionLayer = pr32::physics::CollisionLayer;
-
-static constexpr CollisionLayer LAYER_SNAKE_HEAD = 1 << 0;
-static constexpr CollisionLayer LAYER_SNAKE_BODY = 1 << 1;
-
-class SnakeSegmentActor : public pr32::core::Actor {
-public:
-    SnakeSegmentActor(int gridX, int gridY, bool head)
-        : pr32::core::Actor(gridX * CELL_SIZE, gridY * CELL_SIZE, CELL_SIZE - 1, CELL_SIZE - 1),
-          cellX(gridX),
-          cellY(gridY),
-          isHead(head),
-          alive(true) {
-        setHead(head);
-    }
-
-    void update(unsigned long deltaTime) override {
-        (void)deltaTime;
-    }
-
-    void draw(pr32::graphics::Renderer& renderer) override {
-        using Color = pr32::graphics::Color;
-        Color color = isHead ? Color::LightGreen : Color::DarkGreen;
-        renderer.drawFilledRectangle(cellX * CELL_SIZE, cellY * CELL_SIZE, CELL_SIZE - 1, CELL_SIZE - 1, color);
-    }
-
-    pr32::core::Rect getHitBox() override {
-        return { static_cast<float>(cellX * CELL_SIZE), static_cast<float>(cellY * CELL_SIZE), CELL_SIZE - 1, CELL_SIZE - 1 };
-    }
-
-    void onCollision(pr32::core::Actor* other) override {
-        (void)other;
-        if (isHead) {
-            alive = false;
-        }
-    }
-
-    void setCellPosition(int gridX, int gridY) {
-        cellX = gridX;
-        cellY = gridY;
-    }
-
-    int getCellX() const {
-        return cellX;
-    }
-
-    int getCellY() const {
-        return cellY;
-    }
-
-    void setHead(bool head) {
-        isHead = head;
-        if (isHead) {
-            setCollisionLayer(LAYER_SNAKE_HEAD);
-            setCollisionMask(LAYER_SNAKE_BODY);
-        } else {
-            setCollisionLayer(LAYER_SNAKE_BODY);
-            setCollisionMask(0);
-        }
-    }
-
-    void resetAlive() {
-        alive = true;
-    }
-
-    bool isAlive() const {
-        return alive;
-    }
-
-private:
-    int cellX;
-    int cellY;
-    bool isHead;
-    bool alive;
-};
 
 SnakeScene::SnakeScene()
     : dir(DIR_RIGHT),
@@ -139,7 +62,7 @@ void SnakeScene::spawnFood() {
     bool valid = false;
     while (!valid) {
         int fx = std::rand() % GRID_WIDTH;
-        int fy = std::rand() % GRID_HEIGHT;
+        int fy = TOP_UI_GRID_ROWS + (std::rand() % (GRID_HEIGHT - TOP_UI_GRID_ROWS));
         valid = true;
         for (const auto* segment : snakeSegments) {
             if (segment->getCellX() == fx && segment->getCellY() == fy) {
@@ -208,7 +131,7 @@ void SnakeScene::update(unsigned long deltaTime) {
             newX += 1;
         }
 
-        if (newX < 0 || newX >= GRID_WIDTH || newY < 0 || newY >= GRID_HEIGHT) {
+        if (newX < 0 || newX >= GRID_WIDTH || newY < TOP_UI_GRID_ROWS || newY >= GRID_HEIGHT) {
             gameOver = true;
             pr32::audio::AudioEvent ev{};
             ev.type = pr32::audio::WaveType::NOISE;
@@ -290,6 +213,12 @@ void SnakeScene::draw(pr32::graphics::Renderer& renderer) {
 
     renderer.drawFilledRectangle(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, Color::Black);
 
+    int playAreaX = 0;
+    int playAreaY = TOP_UI_GRID_ROWS * CELL_SIZE;
+    int playAreaW = GRID_WIDTH * CELL_SIZE - 1;
+    int playAreaH = (GRID_HEIGHT - TOP_UI_GRID_ROWS) * CELL_SIZE - 1;
+    renderer.drawRectangle(playAreaX, playAreaY, playAreaW, playAreaH, Color::DarkGreen);
+
     int fx = food.x * CELL_SIZE;
     int fy = food.y * CELL_SIZE;
     renderer.drawFilledRectangle(fx, fy, CELL_SIZE - 1, CELL_SIZE - 1, Color::Red);
@@ -298,7 +227,7 @@ void SnakeScene::draw(pr32::graphics::Renderer& renderer) {
 
     char scoreStr[16];
     std::snprintf(scoreStr, sizeof(scoreStr), "SCORE: %d", score);
-    renderer.drawText(scoreStr, 5, 5, Color::White, 2);
+    renderer.drawText(scoreStr, 5, 5, Color::White, 1);
 
     if (gameOver) {
         renderer.drawTextCentered("GAME OVER", 100, Color::White, 2);

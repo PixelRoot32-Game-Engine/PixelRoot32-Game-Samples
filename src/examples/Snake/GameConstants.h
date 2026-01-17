@@ -12,6 +12,7 @@ namespace snake {
     constexpr int CELL_SIZE = 10;
     constexpr int GRID_WIDTH = 24;
     constexpr int GRID_HEIGHT = 24;
+    constexpr int TOP_UI_GRID_ROWS = 2;
 
     constexpr int INITIAL_MOVE_INTERVAL_MS = 150;
     constexpr int MIN_MOVE_INTERVAL_MS = 50;

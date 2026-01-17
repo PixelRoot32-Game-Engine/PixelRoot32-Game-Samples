@@ -1,0 +1,36 @@
+#pragma once
+#include "core/Actor.h"
+#include "graphics/Renderer.h"
+#include "GameConstants.h"
+#include "physics/CollisionTypes.h"
+
+namespace pr32 = pixelroot32;
+
+namespace snake {
+
+class SnakeSegmentActor : public pr32::core::Actor {
+public:
+    SnakeSegmentActor(int gridX, int gridY, bool head);
+
+    void update(unsigned long deltaTime) override;
+    void draw(pr32::graphics::Renderer& renderer) override;
+    pr32::core::Rect getHitBox() override;
+    void onCollision(pr32::core::Actor* other) override;
+
+    void setCellPosition(int gridX, int gridY);
+    int getCellX() const;
+    int getCellY() const;
+
+    void setHead(bool head);
+    void resetAlive();
+    bool isAlive() const;
+
+private:
+    int cellX;
+    int cellY;
+    bool isHead;
+    bool alive;
+};
+
+}
+
