@@ -8,6 +8,7 @@
 #include "examples/TicTacToe/TicTacToeScene.h"
 #include "examples/GeometryJump/GeometryJumpScene.h"
 #include "examples/Snake/SnakeScene.h"
+#include "examples/SpaceInvaders/SpaceInvadersScene.h"
 
 namespace pr32 = pixelroot32;
 
@@ -19,6 +20,7 @@ brickbreaker::BrickBreakerScene brickScene;
 tictactoe::TicTacToeScene tttScene;
 geometryjump::GeometryJumpScene geometryScene;
 snake::SnakeScene snakeScene;
+spaceinvaders::SpaceInvadersScene spaceInvadersScene;
 
 using Color = pr32::graphics::Color;
 
@@ -65,6 +67,11 @@ void MenuScene::init() {
         engine.setScene(&snakeScene);
     });
     addEntity(snakeButton);
+
+    spaceInvadersButton = new pr32::graphics::ui::UIButton("SPACE INVADERS", menu::BTN_SELECT, btnX, startY + 5*btnH + gap, btnW, btnH, []() {
+        engine.setScene(&spaceInvadersScene);
+    });
+    addEntity(spaceInvadersButton);
 
     // Footer - Instructions
     // Cyan color for footer
@@ -141,6 +148,7 @@ void MenuScene::update(unsigned long deltaTime) {
     tttButton->handleInput(input);
     geometryButton->handleInput(input);
     snakeButton->handleInput(input);
+    spaceInvadersButton->handleInput(input);
 }
 
 void MenuScene::updateButtonStyles() {
@@ -161,6 +169,9 @@ void MenuScene::updateButtonStyles() {
 
     snakeButton->setSelected(selectedIndex == 4);
     snakeButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 4));
+
+    spaceInvadersButton->setSelected(selectedIndex == 5);
+    spaceInvadersButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 5));
 }
 
 void MenuScene::draw(pixelroot32::graphics::Renderer& renderer) {

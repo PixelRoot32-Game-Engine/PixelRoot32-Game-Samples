@@ -30,5 +30,5 @@ namespace menu {
     constexpr float SOUND_VOL_BLIP = 0.5f;
     constexpr float SOUND_VOL_NAV = 0.3f;
 
-    constexpr int GAME_COUNT = 5;
+    constexpr int GAME_COUNT = 6;
 }
