@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include "graphics/Renderer.h"
+#include "GameConstants.h"
 
 namespace spaceinvaders {
 
@@ -119,14 +120,14 @@ static const uint16_t OCTOPUS_F2_BITS[] = {
 };
 
 // Sprite descriptors that can be reused by multiple actors.
-static const pixelroot32::graphics::Sprite SQUID_F1 = { SQUID_F1_BITS, 8, 8 };
-static const pixelroot32::graphics::Sprite SQUID_F2 = { SQUID_F2_BITS, 8, 8 };
+static const pixelroot32::graphics::Sprite SQUID_F1 = { SQUID_F1_BITS, ALIEN_SQUID_SPRITE_W, ALIEN_SQUID_SPRITE_H };
+static const pixelroot32::graphics::Sprite SQUID_F2 = { SQUID_F2_BITS, ALIEN_SQUID_SPRITE_W, ALIEN_SQUID_SPRITE_H };
 
-static const pixelroot32::graphics::Sprite CRAB_F1_REAL = { CRAB_F1_REAL_BITS, 11, 8 };
-static const pixelroot32::graphics::Sprite CRAB_F2_REAL = { CRAB_F2_REAL_BITS, 11, 8 };
+static const pixelroot32::graphics::Sprite CRAB_F1_REAL = { CRAB_F1_REAL_BITS, ALIEN_CRAB_SPRITE_W, ALIEN_CRAB_SPRITE_H };
+static const pixelroot32::graphics::Sprite CRAB_F2_REAL = { CRAB_F2_REAL_BITS, ALIEN_CRAB_SPRITE_W, ALIEN_CRAB_SPRITE_H };
 
-static const pixelroot32::graphics::Sprite OCTOPUS_F1 = { OCTOPUS_F1_BITS, 12, 8 };
-static const pixelroot32::graphics::Sprite OCTOPUS_F2 = { OCTOPUS_F2_BITS, 12, 8 };
+static const pixelroot32::graphics::Sprite OCTOPUS_F1 = { OCTOPUS_F1_BITS, ALIEN_OCTOPUS_SPRITE_W, ALIEN_OCTOPUS_SPRITE_H };
+static const pixelroot32::graphics::Sprite OCTOPUS_F2 = { OCTOPUS_F2_BITS, ALIEN_OCTOPUS_SPRITE_W, ALIEN_OCTOPUS_SPRITE_H };
 
 // Example layered sprite using MultiSprite (body + eyes highlight).
 // Eyes layer only sets a small subset of pixels, rendered in a second color.
@@ -147,8 +148,8 @@ static const pixelroot32::graphics::SpriteLayer CRAB_LAYERS_F1[] = {
 };
 
 static const pixelroot32::graphics::MultiSprite CRAB_F1_MULTI = {
-    11,
-    8,
+    ALIEN_CRAB_SPRITE_W,
+    ALIEN_CRAB_SPRITE_H,
     CRAB_LAYERS_F1,
     2
 };

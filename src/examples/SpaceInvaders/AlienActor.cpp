@@ -58,6 +58,7 @@ AlienActor::AlienActor(float x, float y, AlienType type)
 }
 
 void AlienActor::update(unsigned long deltaTime) {
+    (void)deltaTime;
     // Aliens don't move themselves in update(), they are moved by Scene controller
 }
 
@@ -83,9 +84,9 @@ void AlienActor::draw(pixelroot32::graphics::Renderer& renderer) {
     const int drawY = static_cast<int>(y);
 
     if (multiSprite) {
-        renderer.drawMultiSprite(*multiSprite, drawX, drawY);
+        renderer.drawMultiSprite(*multiSprite, drawX, drawY, SPRITE_SCALE, SPRITE_SCALE);
     } else if (sprite) {
-        renderer.drawSprite(*sprite, drawX, drawY, Color::Orange);
+        renderer.drawSprite(*sprite, drawX, drawY, SPRITE_SCALE, SPRITE_SCALE, Color::Orange);
     }
 }
 
@@ -94,6 +95,7 @@ pixelroot32::core::Rect AlienActor::getHitBox() {
 }
 
 void AlienActor::onCollision(pixelroot32::core::Actor* other) {
+    (void)other;
     // Handled mostly by Projectile, but here we can react too
 }
 

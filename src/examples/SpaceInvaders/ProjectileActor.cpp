@@ -17,7 +17,7 @@ void ProjectileActor::update(unsigned long deltaTime) {
     x += vx * dt;
     y += vy * dt;
 
-    if (y < -PROJECTILE_HEIGHT || y > LOGICAL_HEIGHT) {
+    if (y < -PROJECTILE_HEIGHT || y > DISPLAY_HEIGHT) {
         active = false;
     }
 }

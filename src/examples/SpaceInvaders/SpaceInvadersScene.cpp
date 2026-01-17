@@ -29,14 +29,14 @@ using pixelroot32::audio::Note;
 static const InstrumentPreset BASS_INSTRUMENT = INSTR_PULSE_BASS;
 
 static const MusicNote BGM_SLOW_NOTES[] = {
-    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::C, 0.18f),
-    pixelroot32::audio::makeRest(0.10f),
-    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::C, 0.18f),
-    pixelroot32::audio::makeRest(0.10f),
-    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::C, 0.18f),
-    pixelroot32::audio::makeRest(0.10f),
-    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::C, 0.18f),
-    pixelroot32::audio::makeRest(0.10f),
+    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::C, 0.21f),
+    pixelroot32::audio::makeRest(0.207f),
+    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::C, 0.21f),
+    pixelroot32::audio::makeRest(0.207f),
+    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::C, 0.21f),
+    pixelroot32::audio::makeRest(0.207f),
+    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::C, 0.21f),
+    pixelroot32::audio::makeRest(0.207f),
 };
 
 static const MusicNote BGM_MEDIUM_NOTES[] = {
@@ -81,6 +81,39 @@ static const MusicTrack BGM_FAST_TRACK = {
     BGM_FAST_NOTES,
     sizeof(BGM_FAST_NOTES) / sizeof(MusicNote),
     true,
+    WaveType::PULSE,
+    BASS_INSTRUMENT.duty
+};
+
+// --- WIN / GAME OVER MUSIC ---
+
+static const MusicNote WIN_NOTES[] = {
+    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::C, 0.15f),
+    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::E, 0.15f),
+    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::G, 0.15f),
+    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::C, 0.4f), // C High ideally, but using C for safety if C_High undefined
+    pixelroot32::audio::makeRest(0.1f)
+};
+
+static const MusicTrack WIN_TRACK = {
+    WIN_NOTES,
+    sizeof(WIN_NOTES) / sizeof(MusicNote),
+    false, // No loop
+    WaveType::PULSE,
+    BASS_INSTRUMENT.duty
+};
+
+static const MusicNote GAME_OVER_NOTES[] = {
+    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::G, 0.2f),
+    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::E, 0.2f), // Using E instead of Eb if Eb undefined, checking later
+    pixelroot32::audio::makeNote(BASS_INSTRUMENT, Note::C, 0.4f),
+    pixelroot32::audio::makeRest(0.1f)
+};
+
+static const MusicTrack GAME_OVER_TRACK = {
+    GAME_OVER_NOTES,
+    sizeof(GAME_OVER_NOTES) / sizeof(MusicNote),
+    false, // No loop
     WaveType::PULSE,
     BASS_INSTRUMENT.duty
 };
@@ -194,12 +227,13 @@ SpaceInvadersScene::SpaceInvadersScene()
       score(0),
       lives(3),
       gameOver(false),
-      stepTimer(0),
-      stepDelay(0),
+      gameWon(false),
+      stepTimer(0.0f),
+      stepDelay(BASE_STEP_DELAY),
       moveDirection(1),
       isPaused(false),
       fireInputReady(false),
-      currentMusicTempoFactor(0.0f) {
+      currentMusicTempoFactor(1.0f) {
 
     // Initialize enemy explosion slots as inactive.
     for (int i = 0; i < MaxEnemyExplosions; ++i) {
@@ -218,7 +252,8 @@ void SpaceInvadersScene::init() {
     resetGame();
 
     engine.getMusicPlayer().play(BGM_SLOW_TRACK);
-    currentMusicTempoFactor = 0.0f;
+    currentMusicTempoFactor = 1.0f;
+    engine.getMusicPlayer().setTempoFactor(currentMusicTempoFactor);
 }
 
 void SpaceInvadersScene::cleanup() {
@@ -255,6 +290,7 @@ void SpaceInvadersScene::resetGame() {
     score = 0;
     lives = 3;
     gameOver = false;
+    gameWon = false;
     isPaused = false;
     fireInputReady = false;
 
@@ -264,9 +300,9 @@ void SpaceInvadersScene::resetGame() {
         enemyExplosions[i].remainingMs = 0;
     }
     
-    stepTimer = 0;
+    stepTimer = 0.0f;
     moveDirection = 1;
-    calculateStepDelay();
+    stepDelay = BASE_STEP_DELAY;
 }
 
 void SpaceInvadersScene::spawnAliens() {
@@ -293,7 +329,7 @@ void SpaceInvadersScene::spawnBunkers() {
     }
 
     float totalBunkersWidth = BUNKER_COUNT * BUNKER_WIDTH;
-    float gap = (LOGICAL_WIDTH - totalBunkersWidth) / (BUNKER_COUNT + 1);
+    float gap = (DISPLAY_WIDTH - totalBunkersWidth) / (BUNKER_COUNT + 1);
 
     for (int i = 0; i < BUNKER_COUNT; ++i) {
         float x = gap + i * (BUNKER_WIDTH + gap);
@@ -309,7 +345,8 @@ void SpaceInvadersScene::update(unsigned long deltaTime) {
         if (engine.getInputManager().isButtonPressed(BTN_FIRE)) {
             resetGame();
             engine.getMusicPlayer().play(BGM_SLOW_TRACK);
-            currentMusicTempoFactor = 0.0f;
+            currentMusicTempoFactor = 1.0f;
+            engine.getMusicPlayer().setTempoFactor(currentMusicTempoFactor);
         }
         return;
     }
@@ -384,10 +421,12 @@ void SpaceInvadersScene::update(unsigned long deltaTime) {
 }
 
 void SpaceInvadersScene::updateAliens(unsigned long deltaTime) {
-    stepTimer += deltaTime;
+    // Scaled time accumulation for movement sync
+    float scaledDelta = static_cast<float>(deltaTime) * currentMusicTempoFactor;
+    stepTimer += scaledDelta;
     
     if (stepTimer >= stepDelay) {
-        stepTimer = 0;
+        stepTimer = 0.0f;
         
         bool edgeHit = false;
         
@@ -396,7 +435,7 @@ void SpaceInvadersScene::updateAliens(unsigned long deltaTime) {
             if (!alien->isActive()) continue;
             
             if (moveDirection == 1) { // Moving Right
-                if (alien->x + alien->width >= LOGICAL_WIDTH - 2) {
+                if (alien->x + alien->width >= DISPLAY_WIDTH - 2) {
                     edgeHit = true;
                     break;
                 }
@@ -435,6 +474,8 @@ void SpaceInvadersScene::updateAliens(unsigned long deltaTime) {
                 if (bottom >= player->y) {
                     lives = 0;
                     gameOver = true;
+                    engine.getMusicPlayer().setTempoFactor(1.0f);
+                    engine.getMusicPlayer().play(GAME_OVER_TRACK);
                     break;
                 }
             }
@@ -457,7 +498,7 @@ void SpaceInvadersScene::handleCollisions() {
                     proj->deactivate();
                     alien->kill();
                     score += alien->getScoreValue();
-                    calculateStepDelay();
+                    // calculateStepDelay(); // Removed: Sync logic uses Y position now
                     float ex = alien->x + alien->width * 0.5f;
                     float ey = alien->y + alien->height * 0.5f;
                     spawnEnemyExplosion(ex, ey);
@@ -469,6 +510,13 @@ void SpaceInvadersScene::handleCollisions() {
                     event.volume = 0.6f;
                     event.duty = 0.5f;
                     engine.getAudioEngine().playEvent(event);
+
+                    if (getActiveAlienCount() == 0) {
+                        gameOver = true;
+                        gameWon = true;
+                        engine.getMusicPlayer().setTempoFactor(1.0f);
+                        engine.getMusicPlayer().play(WIN_TRACK);
+                    }
 
                     break;
                 }
@@ -599,17 +647,8 @@ int SpaceInvadersScene::getActiveAlienCount() const {
     return count;
 }
 
-void SpaceInvadersScene::calculateStepDelay() {
-    int count = getActiveAlienCount();
-    if (count == 0) return;
-    
-    int total = ALIEN_ROWS * ALIEN_COLS;
-    stepDelay = INITIAL_STEP_DELAY * count / total;
-    if (stepDelay < MIN_STEP_DELAY) stepDelay = MIN_STEP_DELAY; 
-}
-
 void SpaceInvadersScene::draw(pr32::graphics::Renderer& renderer) {
-    renderer.drawFilledRectangle(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT, pr32::graphics::Color::Black);
+    renderer.drawFilledRectangle(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, pr32::graphics::Color::Black);
     Scene::draw(renderer);
 
     // Draw enemy explosions and player explosion on top of entities.
@@ -622,50 +661,60 @@ void SpaceInvadersScene::draw(pr32::graphics::Renderer& renderer) {
     renderer.drawText(buffer, 4, 4, pr32::graphics::Color::White, 1);
 
     std::snprintf(buffer, sizeof(buffer), "LIVES %d", lives);
-    renderer.drawText(buffer, LOGICAL_WIDTH - 70, 4, pr32::graphics::Color::White, 1);
+    renderer.drawText(buffer, DISPLAY_WIDTH - 70, 4, pr32::graphics::Color::White, 1);
 
     if (gameOver) {
-        std::snprintf(buffer, sizeof(buffer), "GAME OVER");
-        int textY = LOGICAL_HEIGHT / 2 - 8;
-        renderer.drawTextCentered(buffer, textY, pr32::graphics::Color::Red, 2);
+        if (gameWon) {
+            std::snprintf(buffer, sizeof(buffer), "YOU WIN!");
+            int textY = DISPLAY_HEIGHT / 2 - 8;
+            renderer.drawTextCentered(buffer, textY, pr32::graphics::Color::Green, 2);
+        } else {
+            std::snprintf(buffer, sizeof(buffer), "GAME OVER");
+            int textY = DISPLAY_HEIGHT / 2 - 8;
+            renderer.drawTextCentered(buffer, textY, pr32::graphics::Color::Red, 2);
+        }
 
         std::snprintf(buffer, sizeof(buffer), "PRESS FIRE");
+        int textY = DISPLAY_HEIGHT / 2 - 8;
         renderer.drawTextCentered(buffer, textY + 20, pr32::graphics::Color::White, 1);
     }
 }
 
 void SpaceInvadersScene::updateMusicTempo() {
-    int total = ALIEN_ROWS * ALIEN_COLS;
-    int alive = getActiveAlienCount();
-    if (alive <= 0) {
-        engine.getMusicPlayer().stop();
-        return;
+    if (gameOver) return;
+
+    float lowestY = ALIEN_START_Y;
+    bool found = false;
+
+    // Find the lowest active alien
+    for (auto* alien : aliens) {
+        if (alien->isActive()) {
+            float y = alien->y + alien->height;
+            if (y > lowestY) {
+                lowestY = y;
+            }
+            found = true;
+        }
     }
 
-    float t = 1.0f - static_cast<float>(alive) / static_cast<float>(total);
+    if (!found) return;
 
-    float newFactor;
-    if (t < 0.33f) {
-        newFactor = 0.0f;
-    } else if (t < 0.66f) {
-        newFactor = 1.0f;
-    } else {
-        newFactor = 2.0f;
-    }
+    // Optimized Threat Factor Calculation (Zero divisions)
+    // threat = (currentY - startY) * invRange
+    float threatFactor = (lowestY - ALIEN_START_Y) * INV_Y_RANGE;
+    
+    // Clamp 0.0 - 1.0
+    if (threatFactor < 0.0f) threatFactor = 0.0f;
+    if (threatFactor > 1.0f) threatFactor = 1.0f;
 
-    if (newFactor == currentMusicTempoFactor) {
-        return;
-    }
+    // Target Tempo: 1.0 (Base) to ~1.9 (Max Speed)
+    float targetTempo = 1.0f + (threatFactor * 0.9f);
 
-    currentMusicTempoFactor = newFactor;
+    // Smoothing (LERP)
+    currentMusicTempoFactor += (targetTempo - currentMusicTempoFactor) * 0.05f;
 
-    if (currentMusicTempoFactor == 0.0f) {
-        engine.getMusicPlayer().play(BGM_SLOW_TRACK);
-    } else if (currentMusicTempoFactor == 1.0f) {
-        engine.getMusicPlayer().play(BGM_MEDIUM_TRACK);
-    } else {
-        engine.getMusicPlayer().play(BGM_FAST_TRACK);
-    }
+    // Apply global sync factor
+    engine.getMusicPlayer().setTempoFactor(currentMusicTempoFactor);
 }
 
 void SpaceInvadersScene::updateEnemyExplosions(unsigned long deltaTime) {
@@ -704,11 +753,11 @@ void SpaceInvadersScene::drawEnemyExplosions(pr32::graphics::Renderer& renderer)
             hw += hx;
             hx = 0;
         }
-        if (hx < LOGICAL_WIDTH && hw > 0) {
-            if (hx + hw > LOGICAL_WIDTH) {
-                hw = LOGICAL_WIDTH - hx;
+        if (hx < DISPLAY_WIDTH && hw > 0) {
+            if (hx + hw > DISPLAY_WIDTH) {
+                hw = DISPLAY_WIDTH - hx;
             }
-            if (hw > 0 && hy >= 0 && hy < LOGICAL_HEIGHT) {
+            if (hw > 0 && hy >= 0 && hy < DISPLAY_HEIGHT) {
                 renderer.drawFilledRectangle(hx, hy, hw, 1, Color::White);
             }
         }
@@ -721,11 +770,11 @@ void SpaceInvadersScene::drawEnemyExplosions(pr32::graphics::Renderer& renderer)
             vh += vy;
             vy = 0;
         }
-        if (vy < LOGICAL_HEIGHT && vh > 0) {
-            if (vy + vh > LOGICAL_HEIGHT) {
-                vh = LOGICAL_HEIGHT - vy;
+        if (vy < DISPLAY_HEIGHT && vh > 0) {
+            if (vy + vh > DISPLAY_HEIGHT) {
+                vh = DISPLAY_HEIGHT - vy;
             }
-            if (vh > 0 && vx >= 0 && vx < LOGICAL_WIDTH) {
+            if (vh > 0 && vx >= 0 && vx < DISPLAY_WIDTH) {
                 renderer.drawFilledRectangle(vx, vy, 1, vh, Color::White);
             }
         }
@@ -761,6 +810,8 @@ void SpaceInvadersScene::handlePlayerHit() {
 
     if (lives <= 0) {
         gameOver = true;
+        engine.getMusicPlayer().setTempoFactor(1.0f);
+        engine.getMusicPlayer().play(GAME_OVER_TRACK);
         return;
     }
 

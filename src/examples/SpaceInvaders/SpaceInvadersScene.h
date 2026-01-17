@@ -68,9 +68,10 @@ namespace spaceinvaders {
         int score;
         int lives;
         bool gameOver;
+        bool gameWon;
 
         // Horde Movement State
-        unsigned long stepTimer;
+        float stepTimer;
         unsigned long stepDelay;
         int moveDirection; // 1: Right, -1: Left
 
@@ -89,7 +90,7 @@ namespace spaceinvaders {
         void handleCollisions();
         void enemyShoot();
         int getActiveAlienCount() const;
-        void calculateStepDelay();
+        void updateMusicTempo();
 
         // Effect helpers
         void updateEnemyExplosions(unsigned long deltaTime);
@@ -101,7 +102,6 @@ namespace spaceinvaders {
         void respawnPlayerUnderBunker();
 
         // Music helpers
-        void updateMusicTempo();
     };
 
 }

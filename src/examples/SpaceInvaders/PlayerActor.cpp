@@ -20,12 +20,12 @@ static const uint16_t PLAYER_SHIP_BITS[] = {
     0x0124
 };
 
-static const Sprite PLAYER_SHIP_SPRITE = { PLAYER_SHIP_BITS, PLAYER_WIDTH, PLAYER_HEIGHT };
+static const Sprite PLAYER_SHIP_SPRITE = { PLAYER_SHIP_BITS, PLAYER_SPRITE_W, PLAYER_SPRITE_H };
 
 PlayerActor::PlayerActor(float x, float y)
     : PhysicsActor(x, y, PLAYER_WIDTH, PLAYER_HEIGHT), isAlive(true) {
-    setWorldSize(LOGICAL_WIDTH, LOGICAL_HEIGHT);
-    setLimits(pr32::core::LimitRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT));
+    setWorldSize(DISPLAY_WIDTH, DISPLAY_HEIGHT);
+    setLimits(pr32::core::LimitRect(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT));
 }
 
 void PlayerActor::update(unsigned long deltaTime) {
@@ -63,6 +63,8 @@ void PlayerActor::draw(pr32::graphics::Renderer& renderer) {
     renderer.drawSprite(PLAYER_SHIP_SPRITE,
                         static_cast<int>(x),
                         static_cast<int>(y),
+                        SPRITE_SCALE,
+                        SPRITE_SCALE,
                         Color::White);
 }
 
@@ -71,6 +73,7 @@ pr32::core::Rect PlayerActor::getHitBox() {
 }
 
 void PlayerActor::onCollision(pr32::core::Actor* other) {
+    (void)other; // Unused parameter
     // Handle collision (e.g., with enemy projectile)
 }
 
