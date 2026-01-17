@@ -9,3 +9,9 @@ in the development cycle.
 
 More information about PlatformIO Unit Testing:
 - https://docs.platformio.org/en/latest/advanced/unit-testing/index.html
+
+
+## Setup
+
+```bash
+git clone --recurse-submodules git@github.com:Gperez88/PixelRoot32-Game-Engine.git
