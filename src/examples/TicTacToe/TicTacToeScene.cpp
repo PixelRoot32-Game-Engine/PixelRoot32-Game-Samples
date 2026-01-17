@@ -57,7 +57,7 @@ void TicTacToeScene::init() {
     boardXOffset = (screenWidth - boardPixelWidth) / 2;
 
     std::snprintf(statusText, sizeof(statusText), "Player X Turn");
-    std::snprintf(instructionsText, sizeof(instructionsText), "LEFT/RIGHT: Move | A: Select");
+    std::snprintf(instructionsText, sizeof(instructionsText), "DPAD: Move | A: Select");
     instructionsVisible = true;
 
     resetGame();
@@ -87,7 +87,7 @@ void TicTacToeScene::resetGame() {
     gameOver = false;
     gameEndTime = 0;
     std::snprintf(statusText, sizeof(statusText), "Player X Turn");
-    std::snprintf(instructionsText, sizeof(instructionsText), "LEFT/RIGHT: Move | A: Select");
+    std::snprintf(instructionsText, sizeof(instructionsText), "DPAD: Move | A: Select");
     instructionsVisible = true;
 }
 
@@ -112,9 +112,11 @@ void TicTacToeScene::handleInput() {
     }
 
     if (!inputReady) {
-        if (!engine.getInputManager().isButtonDown(BTN_SELECT) &&
-            !engine.getInputManager().isButtonDown(BTN_NEXT) &&
-            !engine.getInputManager().isButtonDown(BTN_PREV)) {
+        if (!input.isButtonDown(BTN_SELECT) &&
+            !input.isButtonDown(BTN_NEXT) &&
+            !input.isButtonDown(BTN_PREV) &&
+            !input.isButtonDown(BTN_UP) &&
+            !input.isButtonDown(BTN_DOWN)) {
             inputReady = true;
         } else {
             return;
@@ -123,21 +125,49 @@ void TicTacToeScene::handleInput() {
 
     bool leftDown = input.isButtonDown(BTN_PREV);
     bool rightDown = input.isButtonDown(BTN_NEXT);
+    bool upDown = input.isButtonDown(BTN_UP);
+    bool downDown = input.isButtonDown(BTN_DOWN);
 
     static bool wasLeftDown = false;
     static bool wasRightDown = false;
+    static bool wasUpDown = false;
+    static bool wasDownDown = false;
 
     if (leftDown && !wasLeftDown) {
-        cursorIndex--;
-        if (cursorIndex < 0) cursorIndex = 8;
+        int row = cursorIndex / BOARD_SIZE;
+        int col = cursorIndex % BOARD_SIZE;
+        col--;
+        if (col < 0) col = BOARD_SIZE - 1;
+        cursorIndex = row * BOARD_SIZE + col;
     }
     wasLeftDown = leftDown;
 
     if (rightDown && !wasRightDown) {
-        cursorIndex++;
-        if (cursorIndex > 8) cursorIndex = 0;
+        int row = cursorIndex / BOARD_SIZE;
+        int col = cursorIndex % BOARD_SIZE;
+        col++;
+        if (col >= BOARD_SIZE) col = 0;
+        cursorIndex = row * BOARD_SIZE + col;
     }
     wasRightDown = rightDown;
+
+    if (upDown && !wasUpDown) {
+        int row = cursorIndex / BOARD_SIZE;
+        int col = cursorIndex % BOARD_SIZE;
+        row--;
+        if (row < 0) row = BOARD_SIZE - 1;
+        cursorIndex = row * BOARD_SIZE + col;
+    }
+    wasUpDown = upDown;
+
+    if (downDown && !wasDownDown) {
+        int row = cursorIndex / BOARD_SIZE;
+        int col = cursorIndex % BOARD_SIZE;
+        row++;
+        if (row >= BOARD_SIZE) row = 0;
+        cursorIndex = row * BOARD_SIZE + col;
+    }
+    wasDownDown = downDown;
 
     if (currentPlayer != humanPlayer) {
         return;
@@ -405,6 +435,8 @@ bool TicTacToeScene::isBoardFull() {
 }
 
 void TicTacToeScene::draw(pr32::graphics::Renderer& renderer) {
+    renderer.drawFilledRectangle(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, Color::Black);
+
     renderer.drawTextCentered(statusText, 10, Color::White, 1);
     if (instructionsVisible) {
         renderer.drawTextCentered(instructionsText, DISPLAY_HEIGHT - 20, Color::LightGray, 1);
@@ -421,21 +453,20 @@ void TicTacToeScene::drawGrid(pr32::graphics::Renderer& renderer) {
     int startX = boardXOffset;
     int startY = BOARD_Y_OFFSET;
     int fullSize = BOARD_SIZE * CELL_SIZE;
+    Color gridColor = Color::Olive;
+    Color borderColor = Color::Gold;
 
-    // Vertical lines
     for (int i = 1; i < BOARD_SIZE; ++i) {
         int x = startX + i * CELL_SIZE;
-        renderer.drawLine(x, startY, x, startY + fullSize, Color::White);
+        renderer.drawLine(x, startY, x, startY + fullSize, gridColor);
     }
 
-    // Horizontal lines
     for (int i = 1; i < BOARD_SIZE; ++i) {
         int y = startY + i * CELL_SIZE;
-        renderer.drawLine(startX, y, startX + fullSize, y, Color::White);
+        renderer.drawLine(startX, y, startX + fullSize, y, gridColor);
     }
-    
-    // Border (Optional, for aesthetics)
-    renderer.drawRectangle(startX - 2, startY - 2, fullSize + 4, fullSize + 4, Color::DarkGray);
+
+    renderer.drawRectangle(startX - 2, startY - 2, fullSize + 4, fullSize + 4, borderColor);
 }
 
 void TicTacToeScene::drawCursor(pr32::graphics::Renderer& renderer) {
@@ -445,8 +476,6 @@ void TicTacToeScene::drawCursor(pr32::graphics::Renderer& renderer) {
     int x = boardXOffset + col * CELL_SIZE;
     int y = BOARD_Y_OFFSET + row * CELL_SIZE;
 
-    // Draw a blinking selection box or just a highlight
-    // Using a simple rectangle inset
     renderer.drawRectangle(x + 2, y + 2, CELL_SIZE - 4, CELL_SIZE - 4, Color::Yellow);
 }
 
@@ -466,23 +495,31 @@ void TicTacToeScene::drawMarks(pr32::graphics::Renderer& renderer) {
 }
 
 void TicTacToeScene::drawX(pr32::graphics::Renderer& renderer, int x, int y) {
-    int padding = 10;
+    int padding = 8;
     int x1 = x + padding;
     int y1 = y + padding;
     int x2 = x + CELL_SIZE - padding;
     int y2 = y + CELL_SIZE - padding;
+    Color xColor = Color::LightRed;
 
-    renderer.drawLine(x1, y1, x2, y2, Color::Red);
-    renderer.drawLine(x2, y1, x1, y2, Color::Red);
+    renderer.drawLine(x1, y1, x2, y2, xColor);
+    renderer.drawLine(x1 + 1, y1, x2 + 1, y2, xColor);
+    renderer.drawLine(x1, y1 + 1, x2, y2 + 1, xColor);
+
+    renderer.drawLine(x2, y1, x1, y2, xColor);
+    renderer.drawLine(x2 - 1, y1, x1 - 1, y2, xColor);
+    renderer.drawLine(x2, y1 + 1, x1, y2 + 1, xColor);
 }
 
 void TicTacToeScene::drawO(pr32::graphics::Renderer& renderer, int x, int y) {
-    int padding = 10;
-    int radius = (CELL_SIZE / 2) - padding;
-    int centerX = x + CELL_SIZE / 2;
-    int centerY = y + CELL_SIZE / 2;
+    int padding = 8;
+    int size = CELL_SIZE - padding * 2;
+    int ox = x + padding;
+    int oy = y + padding;
+    Color oColor = Color::LightBlue;
 
-    renderer.drawCircle(centerX, centerY, radius, Color::Blue);
+    renderer.drawRectangle(ox, oy, size, size, oColor);
+    renderer.drawRectangle(ox + 1, oy + 1, size - 2, size - 2, oColor);
 }
 
 }

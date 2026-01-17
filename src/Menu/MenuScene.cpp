@@ -6,7 +6,6 @@
 #include "examples/BrickBreaker/BrickBreakerScene.h"
 #include "examples/Pong/PongScene.h"
 #include "examples/TicTacToe/TicTacToeScene.h"
-#include "examples/GeometryJump/GeometryJumpScene.h"
 #include "examples/Snake/SnakeScene.h"
 #include "examples/SpaceInvaders/SpaceInvadersScene.h"
 
@@ -18,7 +17,6 @@ extern pr32::core::Engine engine;
 // pong::PongScene pongScene;
 // brickbreaker::BrickBreakerScene brickScene;
 tictactoe::TicTacToeScene tttScene;
-geometryjump::GeometryJumpScene geometryScene;
 snake::SnakeScene snakeScene;
 spaceinvaders::SpaceInvadersScene spaceInvadersScene;
 
@@ -60,17 +58,12 @@ void MenuScene::init() {
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
     addEntity(tttButton);
 
-    geometryButton = new pr32::graphics::ui::UIButton("GEOMETRY JUMP", menu::BTN_SELECT, btnX, startY + stepY, btnW, btnH, []() {
-        engine.setScene(&geometryScene);
-    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
-    addEntity(geometryButton);
-
-    snakeButton = new pr32::graphics::ui::UIButton("SNAKE", menu::BTN_SELECT, btnX, startY + 2*stepY, btnW, btnH, []() {
+    snakeButton = new pr32::graphics::ui::UIButton("SNAKE", menu::BTN_SELECT, btnX, startY + stepY, btnW, btnH, []() {
         engine.setScene(&snakeScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
     addEntity(snakeButton);
 
-    spaceInvadersButton = new pr32::graphics::ui::UIButton("SPACE INVADERS", menu::BTN_SELECT, btnX, startY + 3*stepY, btnW, btnH, []() {
+    spaceInvadersButton = new pr32::graphics::ui::UIButton("SPACE INVADERS", menu::BTN_SELECT, btnX, startY + 2*stepY, btnW, btnH, []() {
         engine.setScene(&spaceInvadersScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
     addEntity(spaceInvadersButton);
@@ -87,9 +80,6 @@ void MenuScene::init() {
 
     tttButton->setSelected(false);
     tttButton->setStyle(Color::White, Color::Cyan, false);
-
-    geometryButton->setSelected(false);
-    geometryButton->setStyle(Color::White, Color::Cyan, false);
 
     snakeButton->setSelected(false);
     snakeButton->setStyle(Color::White, Color::Cyan, false);
@@ -159,7 +149,6 @@ void MenuScene::update(unsigned long deltaTime) {
     // pongButton->handleInput(input);
     // brickButton->handleInput(input);
     tttButton->handleInput(input);
-    geometryButton->handleInput(input);
     snakeButton->handleInput(input);
     spaceInvadersButton->handleInput(input);
 }
@@ -177,14 +166,11 @@ void MenuScene::updateButtonStyles() {
     tttButton->setSelected(selectedIndex == 0);
     tttButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 0));
 
-    geometryButton->setSelected(selectedIndex == 1);
-    geometryButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 1));
+    snakeButton->setSelected(selectedIndex == 1);
+    snakeButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 1));
 
-    snakeButton->setSelected(selectedIndex == 2);
-    snakeButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 2));
-
-    spaceInvadersButton->setSelected(selectedIndex == 3);
-    spaceInvadersButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 3));
+    spaceInvadersButton->setSelected(selectedIndex == 2);
+    spaceInvadersButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 2));
 }
 
 void MenuScene::draw(pixelroot32::graphics::Renderer& renderer) {

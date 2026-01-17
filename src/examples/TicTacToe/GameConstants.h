@@ -4,6 +4,8 @@
 namespace tictactoe {
 
     // Input Constants
+    constexpr uint8_t BTN_UP = 0;
+    constexpr uint8_t BTN_DOWN = 1;
     constexpr uint8_t BTN_SELECT = 4;
     constexpr uint8_t BTN_NEXT = 3;
     constexpr uint8_t BTN_PREV = 2;
