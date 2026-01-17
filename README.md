@@ -1,7 +1,7 @@
 ## GameSample – PixelRoot32 Getting Started Project
 
 This repository is a small **getting‑started project** that shows how to use the
-[PixelRoot32 Game Engine](lib/PixelRoot32-Game-Engine/README.md) inside a
+[PixelRoot32 Game Engine](https://github.com/Gperez88/PixelRoot32-Game-Engine) inside a
 PlatformIO project.
 
 It wires the engine to:
@@ -164,5 +164,5 @@ This sample is meant as a **starting point**:
 
 For detailed engine documentation, refer to:
 
-- [`lib/PixelRoot32-Game-Engine/README.md`](lib/PixelRoot32-Game-Engine/README.md)
-- [`lib/PixelRoot32-Game-Engine/API_REFERENCE.md`](lib/PixelRoot32-Game-Engine/API_REFERENCE.md)
+- [`lib/PixelRoot32-Game-Engine/README.md`](https://github.com/Gperez88/PixelRoot32-Game-Engine/blob/main/README.md)
+- [`lib/PixelRoot32-Game-Engine/API_REFERENCE.md`](https://github.com/Gperez88/PixelRoot32-Game-Engine/blob/main/API_REFERENCE.md)
