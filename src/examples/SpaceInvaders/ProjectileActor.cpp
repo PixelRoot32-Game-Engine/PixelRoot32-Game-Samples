@@ -8,11 +8,15 @@ ProjectileActor::ProjectileActor(float x, float y, ProjectileType type)
     
     float speed = (type == ProjectileType::PLAYER_BULLET) ? -PROJECTILE_SPEED : PROJECTILE_SPEED;
     setVelocity(0, speed);
+    previousX = x;
+    previousY = y;
 }
 
 void ProjectileActor::reset(float newX, float newY, ProjectileType newType) {
     x = newX;
     y = newY;
+    previousX = newX;
+    previousY = newY;
     type = newType;
     active = true;
     float speed = (type == ProjectileType::PLAYER_BULLET) ? -PROJECTILE_SPEED : PROJECTILE_SPEED;
@@ -23,6 +27,8 @@ void ProjectileActor::update(unsigned long deltaTime) {
     if (!active) return;
 
     float dt = deltaTime * 0.001f;
+    previousX = x;
+    previousY = y;
     x += vx * dt;
     y += vy * dt;
 

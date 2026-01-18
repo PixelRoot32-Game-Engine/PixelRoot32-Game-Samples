@@ -26,6 +26,21 @@ using pixelroot32::audio::InstrumentPreset;
 using pixelroot32::audio::INSTR_PULSE_BASS;
 using pixelroot32::audio::Note;
 
+#ifdef PIXELROOT32_ENABLE_SCENE_ARENA
+using pixelroot32::core::SceneArena;
+
+static unsigned char SPACE_INVADERS_SCENE_ARENA_BUFFER[8192];
+
+template<typename T, typename... Args>
+T* arenaNew(SceneArena& arena, Args&&... args) {
+    void* mem = arena.allocate(sizeof(T), alignof(T));
+    if (!mem) {
+        return nullptr;
+    }
+    return new (mem) T(static_cast<Args&&>(args)...);
+}
+#endif
+
 static constexpr int TILE_SIZE = 8;
 static constexpr int TILEMAP_WIDTH = DISPLAY_WIDTH / TILE_SIZE;
 static constexpr int TILEMAP_HEIGHT = DISPLAY_HEIGHT / TILE_SIZE;
@@ -340,6 +355,9 @@ SpaceInvadersScene::~SpaceInvadersScene() {
 }
 
 void SpaceInvadersScene::init() {
+ #ifdef PIXELROOT32_ENABLE_SCENE_ARENA
+    arena.init(SPACE_INVADERS_SCENE_ARENA_BUFFER, sizeof(SPACE_INVADERS_SCENE_ARENA_BUFFER));
+#endif
     resetGame();
 
     engine.getMusicPlayer().play(BGM_SLOW_TRACK);
@@ -350,6 +368,7 @@ void SpaceInvadersScene::init() {
 void SpaceInvadersScene::cleanup() {
     clearEntities();
 
+#ifndef PIXELROOT32_ENABLE_SCENE_ARENA
     if (player) {
         delete player;
         player = nullptr;
@@ -366,16 +385,30 @@ void SpaceInvadersScene::cleanup() {
         delete bunker;
     }
     bunkers.clear();
+#else
+    player = nullptr;
+    aliens.clear();
+    projectiles.clear();
+    bunkers.clear();
+#endif
 }
 
 void SpaceInvadersScene::resetGame() {
     cleanup();
 
+#ifdef PIXELROOT32_ENABLE_SCENE_ARENA
+    arena.reset();
+#endif
+
     if (background) {
         addEntity(background);
     }
 
+ #ifdef PIXELROOT32_ENABLE_SCENE_ARENA
+    player = arenaNew<PlayerActor>(arena, PLAYER_START_X, PLAYER_START_Y);
+#else
     player = new PlayerActor(PLAYER_START_X, PLAYER_START_Y);
+#endif
     addEntity(player);
 
     spawnAliens();
@@ -383,7 +416,14 @@ void SpaceInvadersScene::resetGame() {
 
     projectiles.reserve(MaxProjectiles);
     for (int i = 0; i < MaxProjectiles; ++i) {
+ #ifdef PIXELROOT32_ENABLE_SCENE_ARENA
+        ProjectileActor* projectile = arenaNew<ProjectileActor>(arena, 0.0f, -PROJECTILE_HEIGHT, ProjectileType::PLAYER_BULLET);
+#else
         ProjectileActor* projectile = new ProjectileActor(0.0f, -PROJECTILE_HEIGHT, ProjectileType::PLAYER_BULLET);
+#endif
+        if (!projectile) {
+            continue;
+        }
         projectile->deactivate();
         projectiles.push_back(projectile);
         addEntity(projectile);
@@ -418,7 +458,14 @@ void SpaceInvadersScene::spawnAliens() {
             float x = ALIEN_START_X + (col * ALIEN_SPACING_X);
             float y = ALIEN_START_Y + (row * ALIEN_SPACING_Y);
             
+ #ifdef PIXELROOT32_ENABLE_SCENE_ARENA
+            AlienActor* alien = arenaNew<AlienActor>(arena, x, y, type);
+#else
             AlienActor* alien = new AlienActor(x, y, type);
+#endif
+            if (!alien) {
+                continue;
+            }
             aliens.push_back(alien);
             addEntity(alien);
         }
@@ -436,7 +483,14 @@ void SpaceInvadersScene::spawnBunkers() {
     for (int i = 0; i < BUNKER_COUNT; ++i) {
         float x = gap + i * (BUNKER_WIDTH + gap);
         float y = BUNKER_Y - BUNKER_HEIGHT;
+ #ifdef PIXELROOT32_ENABLE_SCENE_ARENA
+        BunkerActor* bunker = arenaNew<BunkerActor>(arena, x, y, BUNKER_WIDTH, BUNKER_HEIGHT, 4);
+#else
         BunkerActor* bunker = new BunkerActor(x, y, BUNKER_WIDTH, BUNKER_HEIGHT, 4);
+#endif
+        if (!bunker) {
+            continue;
+        }
         bunkers.push_back(bunker);
         addEntity(bunker);
     }
@@ -579,21 +633,40 @@ void SpaceInvadersScene::updateAliens(unsigned long deltaTime) {
 }
 
 void SpaceInvadersScene::handleCollisions() {
+    using pixelroot32::physics::Circle;
+    using pixelroot32::physics::sweepCircleVsRect;
+
     for (auto* proj : projectiles) {
         if (!proj->isActive()) {
             continue;
         }
         if (proj->getType() == ProjectileType::PLAYER_BULLET) {
-            pixelroot32::core::Rect pBox = proj->getHitBox();
+            float radius = PROJECTILE_WIDTH * 0.5f;
+
+            Circle startCircle;
+            startCircle.x = proj->getPreviousX() + radius;
+            startCircle.y = proj->getPreviousY() + PROJECTILE_HEIGHT * 0.5f;
+            startCircle.radius = radius;
+
+            Circle endCircle;
+            endCircle.x = proj->x + radius;
+            endCircle.y = proj->y + PROJECTILE_HEIGHT * 0.5f;
+            endCircle.radius = radius;
+
+            bool hitResolved = false;
+
             for (auto* alien : aliens) {
                 if (!alien->isActive()) {
                     continue;
                 }
-                if (pBox.intersects(alien->getHitBox())) {
+                float tHit = 0.0f;
+                pixelroot32::core::Rect targetBox = alien->getHitBox();
+                if (sweepCircleVsRect(startCircle, endCircle, targetBox, tHit) ||
+                    proj->getHitBox().intersects(targetBox)) {
                     proj->deactivate();
                     alien->kill();
                     score += alien->getScoreValue();
-                    // calculateStepDelay(); // Removed: Sync logic uses Y position now
+
                     float ex = alien->x + alien->width * 0.5f;
                     float ey = alien->y + alien->height * 0.5f;
                     spawnEnemyExplosion(ex, ey);
@@ -613,15 +686,19 @@ void SpaceInvadersScene::handleCollisions() {
                         engine.getMusicPlayer().play(WIN_TRACK);
                     }
 
+                    hitResolved = true;
                     break;
                 }
             }
-            if (proj->isActive()) {
+            if (!hitResolved && proj->isActive()) {
                 for (auto* bunker : bunkers) {
                     if (bunker->isDestroyed()) {
                         continue;
                     }
-                    if (pBox.intersects(bunker->getHitBox())) {
+                    float tHit = 0.0f;
+                    pixelroot32::core::Rect bunkerBox = bunker->getHitBox();
+                    if (sweepCircleVsRect(startCircle, endCircle, bunkerBox, tHit) ||
+                        proj->getHitBox().intersects(bunkerBox)) {
                         proj->deactivate();
                         bunker->applyDamage(1);
                         break;
@@ -641,13 +718,28 @@ void SpaceInvadersScene::handleCollisions() {
             continue;
         }
         if (proj->getType() == ProjectileType::ENEMY_BULLET) {
+            float radius = PROJECTILE_WIDTH * 0.5f;
+
+            Circle startCircle;
+            startCircle.x = proj->getPreviousX() + radius;
+            startCircle.y = proj->getPreviousY() + PROJECTILE_HEIGHT * 0.5f;
+            startCircle.radius = radius;
+
+            Circle endCircle;
+            endCircle.x = proj->x + radius;
+            endCircle.y = proj->y + PROJECTILE_HEIGHT * 0.5f;
+            endCircle.radius = radius;
+
             pixelroot32::core::Rect eBox = proj->getHitBox();
             bool handled = false;
             for (auto* bunker : bunkers) {
                 if (bunker->isDestroyed()) {
                     continue;
                 }
-                if (eBox.intersects(bunker->getHitBox())) {
+                pixelroot32::core::Rect bunkerBox = bunker->getHitBox();
+                float tHit = 0.0f;
+                if (sweepCircleVsRect(startCircle, endCircle, bunkerBox, tHit) ||
+                    eBox.intersects(bunkerBox)) {
                     proj->deactivate();
                     bunker->applyDamage(1);
                     handled = true;
@@ -657,7 +749,9 @@ void SpaceInvadersScene::handleCollisions() {
             if (handled) {
                 continue;
             }
-            if (eBox.intersects(playerBox)) {
+            float tHitPlayer = 0.0f;
+            if (sweepCircleVsRect(startCircle, endCircle, playerBox, tHitPlayer) ||
+                eBox.intersects(playerBox)) {
                 proj->deactivate();
                 handlePlayerHit();
                 break;

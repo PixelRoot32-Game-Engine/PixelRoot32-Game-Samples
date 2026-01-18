@@ -2,6 +2,7 @@
 #include "MenuConstants.h"
 #include "core/Engine.h"
 #include "Config.h"
+#include "graphics/Renderer.h"
 
 #include "examples/Pong/PongScene.h"
 #include "examples/TicTacToe/TicTacToeScene.h"
@@ -21,6 +22,33 @@ spaceinvaders::SpaceInvadersScene spaceInvadersScene;
 
 using Color = pr32::graphics::Color;
 
+#ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
+static const uint8_t MENU_LOGO_2BPP_DATA[] = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x01, 0x15, 0x15, 0x15, 0x15, 0x40,
+    0x05, 0x11, 0x11, 0x10, 0x10, 0x50,
+    0x11, 0x15, 0x15, 0x14, 0x04, 0x44,
+    0x05, 0x01, 0x11, 0x10, 0x01, 0x50,
+    0x01, 0x01, 0x41, 0x15, 0x15, 0x40,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+static const Color MENU_LOGO_2BPP_PALETTE[] = {
+    Color::Transparent,
+    Color::Cyan,
+    Color::Blue
+};
+
+static const pr32::graphics::Sprite2bpp MENU_LOGO_2BPP = {
+    MENU_LOGO_2BPP_DATA,
+    MENU_LOGO_2BPP_PALETTE,
+    24,
+    8,
+    3
+};
+#endif
+
 class MenuBackground : public pr32::core::Entity {
 public:
     MenuBackground()
@@ -36,6 +64,26 @@ public:
     }
 };
 
+#ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
+class MenuLogo : public pr32::core::Entity {
+public:
+    MenuLogo()
+        : pr32::core::Entity(0.0f, 0.0f, 24.0f, 8.0f, pr32::core::EntityType::GENERIC) {
+        setRenderLayer(1);
+    }
+
+    void update(unsigned long) override {
+    }
+
+    void draw(pr32::graphics::Renderer& renderer) override {
+        int screenWidth = renderer.getWidth();
+        int x = (screenWidth - MENU_LOGO_2BPP.width) / 2;
+        int y = menu::TITLE_Y - 10;
+        renderer.drawSprite(MENU_LOGO_2BPP, x, y, false);
+    }
+};
+#endif
+
 void MenuScene::init() {
     int screenWidth = engine.getRenderer().getWidth();
     int screenHeight = engine.getRenderer().getHeight();
@@ -44,7 +92,11 @@ void MenuScene::init() {
 
     addEntity(new MenuBackground());
 
-    titleLabel = new pr32::graphics::ui::UILabel("GAME SELECT", 0, menu::TITLE_Y, Color::White, menu::TITLE_FONT_SIZE);
+#ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
+    addEntity(new MenuLogo());
+#endif
+
+    titleLabel = new pr32::graphics::ui::UILabel("Game List", 0, menu::TITLE_Y, Color::White, 1);
     titleLabel->centerX(screenWidth);
     titleLabel->setRenderLayer(2);
     addEntity(titleLabel);

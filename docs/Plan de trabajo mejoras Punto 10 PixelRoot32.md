@@ -59,7 +59,7 @@ Fase focalizada en mejorar la **escalabilidad visual** sin romper el coste de CP
 
 ---
 
-## Fase 3 – Física: sweep tests y primitivas ligeras
+## Fase 3 – Física: sweep tests y primitivas ligeras (COMPLETADA)
 
 Una vez estabilizados memoria y render, se mejora la **robustez de colisiones** sin introducir un motor pesado.
 
@@ -79,7 +79,7 @@ Una vez estabilizados memoria y render, se mejora la **robustez de colisiones** 
 
 ---
 
-## Fase 4 – Modos visuales avanzados (>1bpp) y consolidación de arenas
+## Fase 4 – Modos visuales avanzados (>1bpp) y consolidación de arenas (COMPLETADA)
 
 Fase opcional y de mayor riesgo, pensada para proyectos que necesiten **más expresividad visual** y un control aún más fino de la memoria.
 
@@ -99,7 +99,7 @@ Fase opcional y de mayor riesgo, pensada para proyectos que necesiten **más exp
 
 ---
 
-## Fase 5 – Revisión y limpieza
+## Fase 5 – Revisión y limpieza (EN CURSO)
 
 **Objetivos**
 - Revisar la coherencia de las nuevas features con la identidad del motor.

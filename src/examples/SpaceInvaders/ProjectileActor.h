@@ -27,6 +27,12 @@ public:
 private:
     ProjectileType type;
     bool active;
+    float previousX = 0.0f;
+    float previousY = 0.0f;
+
+public:
+    float getPreviousX() const { return previousX; }
+    float getPreviousY() const { return previousY; }
 };
 
 }
