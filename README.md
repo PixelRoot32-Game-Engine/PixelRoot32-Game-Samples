@@ -332,6 +332,28 @@ pooled entities, and minimal but responsive feedback.
 
 ---
 
+## Example: SpritesDemo – Multi-Layer Sprites & Animation Groups
+
+The **SpritesDemo** example (under [`src/examples/SpritesDemo`](src/examples/SpritesDemo)) showcases the engine's capability to render complex, multi-colored characters using layered 1bpp sprites and group-based animations.
+
+### Multi-Layer Composition
+
+- Each character is a `MultiSprite` composed of 4 separate 1bpp layers (`LAYER_0` to `LAYER_3`).
+- Each layer is assigned a specific color from the palette (Black, LightBlue, Yellow, Red), combining to form a rich, colorful sprite without requiring full RGB bitmaps.
+- This technique mimics NES/GameBoy-style sprite composition, saving memory while allowing for colorful assets.
+
+### Animation Groups & Switching
+
+- The demo defines **4 distinct animation groups** (ANIM_0 to ANIM_3), each containing a sequence of different characters.
+- A `SpritesDemoActor` manages the playback:
+  - **Frame Stepping**: Advances the animation frame every 150ms.
+  - **Group Switching**: Automatically cycles to the next animation group every 2 seconds.
+- This demonstrates how to decouple animation logic (`SpriteAnimation`) from rendering (`Renderer::drawMultiSprite`), allowing for dynamic and state-driven visuals.
+
+> **Note:** The sprites used in this demo were generated using the [PixelRoot32-Sprite-Sheet-Compiler](https://github.com/PixelRoot32-Game-Engine/PixelRoot32-Sprite-Sheet-Compiler/tree/master).
+
+---
+
 ## Using PixelRoot32 in Your Own Projects
 
 This sample is meant as a **starting point**:

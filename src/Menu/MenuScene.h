@@ -16,6 +16,7 @@ private:
     pixelroot32::graphics::ui::UIButton* snakeButton;
     pixelroot32::graphics::ui::UIButton* spaceInvadersButton;
     pixelroot32::graphics::ui::UIButton* cameraDemoButton;
+    pixelroot32::graphics::ui::UIButton* spritesDemoButton;
     
     int selectedIndex = 0;
     void updateButtonStyles();
