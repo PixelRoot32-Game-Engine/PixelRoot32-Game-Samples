@@ -10,7 +10,7 @@ namespace menu {
 
     // UI Dimensions & Layout
     constexpr float BTN_WIDTH = 120.0f;
-    constexpr float BTN_HEIGHT = 25.0f;
+    constexpr float BTN_HEIGHT = 20.0f;
     constexpr float BTN_START_Y = 60.0f;
     constexpr float BTN_GAP = 6.0f;
     
@@ -31,5 +31,5 @@ namespace menu {
     constexpr float SOUND_VOL_BLIP = 0.5f;
     constexpr float SOUND_VOL_NAV = 0.3f;
 
-    constexpr int GAME_COUNT = 4;
+    constexpr int GAME_COUNT = 6;
 }

@@ -8,6 +8,7 @@
 #include "examples/TicTacToe/TicTacToeScene.h"
 #include "examples/Snake/SnakeScene.h"
 #include "examples/SpaceInvaders/SpaceInvadersScene.h"
+#include "examples/CameraDemo/CameraDemoScene.h"
 
 namespace pr32 = pixelroot32;
 
@@ -19,6 +20,7 @@ pong::PongScene pongScene;
 tictactoe::TicTacToeScene tttScene;
 snake::SnakeScene snakeScene;
 spaceinvaders::SpaceInvadersScene spaceInvadersScene;
+camerademo::CameraDemoScene cameraDemoScene;
 
 using Color = pr32::graphics::Color;
 
@@ -133,6 +135,12 @@ void MenuScene::init() {
     spaceInvadersButton->setRenderLayer(2);
     addEntity(spaceInvadersButton);
 
+    cameraDemoButton = new pr32::graphics::ui::UIButton("CAMERA DEMO", menu::BTN_SELECT, btnX, startY + 4*stepY, btnW, btnH, []() {
+        engine.setScene(&cameraDemoScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+    cameraDemoButton->setRenderLayer(2);
+    addEntity(cameraDemoButton);
+
     lblNavigate = new pr32::graphics::ui::UILabel("UP/DOWN: Navigate", 0, screenHeight - menu::NAV_INSTR_Y_OFFSET, Color::Cyan, menu::INSTRUCTION_FONT_SIZE);
     lblNavigate->centerX(screenWidth);
     lblNavigate->setRenderLayer(2);
@@ -207,6 +215,7 @@ void MenuScene::update(unsigned long deltaTime) {
     tttButton->handleInput(input);
     snakeButton->handleInput(input);
     spaceInvadersButton->handleInput(input);
+    cameraDemoButton->handleInput(input);
 }
 
 void MenuScene::updateButtonStyles() {
@@ -224,6 +233,9 @@ void MenuScene::updateButtonStyles() {
 
     spaceInvadersButton->setSelected(selectedIndex == 3);
     spaceInvadersButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 3));
+
+    cameraDemoButton->setSelected(selectedIndex == 4);
+    cameraDemoButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 4));
 }
 
 void MenuScene::draw(pixelroot32::graphics::Renderer& renderer) {
