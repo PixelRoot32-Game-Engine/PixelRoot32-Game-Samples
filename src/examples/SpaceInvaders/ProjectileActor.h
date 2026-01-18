@@ -15,6 +15,7 @@ public:
     
     void update(unsigned long deltaTime) override;
     void draw(pixelroot32::graphics::Renderer& renderer);
+    void reset(float x, float y, ProjectileType type);
     
     pixelroot32::core::Rect getHitBox() override;
     void onCollision(pixelroot32::core::Actor* other) override;

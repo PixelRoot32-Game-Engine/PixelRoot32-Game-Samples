@@ -17,6 +17,7 @@ namespace spaceinvaders {
 
 using pixelroot32::graphics::Sprite;
 using pixelroot32::graphics::SpriteAnimationFrame;
+using pixelroot32::graphics::TileMap;
 using pixelroot32::audio::AudioEvent;
 using pixelroot32::audio::WaveType;
 using pixelroot32::audio::MusicNote;
@@ -24,6 +25,88 @@ using pixelroot32::audio::MusicTrack;
 using pixelroot32::audio::InstrumentPreset;
 using pixelroot32::audio::INSTR_PULSE_BASS;
 using pixelroot32::audio::Note;
+
+static constexpr int TILE_SIZE = 8;
+static constexpr int TILEMAP_WIDTH = DISPLAY_WIDTH / TILE_SIZE;
+static constexpr int TILEMAP_HEIGHT = DISPLAY_HEIGHT / TILE_SIZE;
+
+static const uint16_t TILE_EMPTY_BITS[] = {
+    0x0000,
+    0x0000,
+    0x0000,
+    0x0000,
+    0x0000,
+    0x0000,
+    0x0000,
+    0x0000
+};
+
+static const uint16_t TILE_STAR_BITS[] = {
+    0x0000,
+    0x0000,
+    0x0100,
+    0x0380,
+    0x0100,
+    0x0000,
+    0x0000,
+    0x0000
+};
+
+static const Sprite TILE_SPRITES[] = {
+    { TILE_EMPTY_BITS, TILE_SIZE, TILE_SIZE },
+    { TILE_STAR_BITS,  TILE_SIZE, TILE_SIZE }
+};
+
+static uint8_t STARFIELD_INDICES[TILEMAP_WIDTH * TILEMAP_HEIGHT];
+
+static TileMap STARFIELD_MAP = {
+    STARFIELD_INDICES,
+    static_cast<uint8_t>(TILEMAP_WIDTH),
+    static_cast<uint8_t>(TILEMAP_HEIGHT),
+    TILE_SPRITES,
+    TILE_SIZE,
+    TILE_SIZE,
+    static_cast<uint16_t>(sizeof(TILE_SPRITES) / sizeof(Sprite))
+};
+
+static void initStarfield() {
+    static bool initialized = false;
+    if (initialized) {
+        return;
+    }
+    initialized = true;
+
+    int total = TILEMAP_WIDTH * TILEMAP_HEIGHT;
+    for (int i = 0; i < total; ++i) {
+        int x = i % TILEMAP_WIDTH;
+        int y = i / TILEMAP_WIDTH;
+        int pattern = (x * 3 + y * 5);
+        if (pattern % 11 == 0) {
+            STARFIELD_INDICES[i] = 1;
+        } else {
+            STARFIELD_INDICES[i] = 0;
+        }
+    }
+}
+
+class TilemapBackground : public pr32::core::Entity {
+public:
+    TilemapBackground(const TileMap& map)
+        : pr32::core::Entity(0.0f, 0.0f, DISPLAY_WIDTH, DISPLAY_HEIGHT, pr32::core::EntityType::GENERIC),
+          tilemap(map) {
+        setRenderLayer(0);
+    }
+
+    void update(unsigned long) override {
+    }
+
+    void draw(pr32::graphics::Renderer& renderer) override {
+        renderer.drawTileMap(tilemap, 0, 0, pr32::graphics::Color::DarkBlue);
+    }
+
+private:
+    const TileMap& tilemap;
+};
 
 // Base four-note bass pattern: "tu tu tu tu"
 static const InstrumentPreset BASS_INSTRUMENT = INSTR_PULSE_BASS;
@@ -223,7 +306,8 @@ bool ExplosionAnimation::isActive() const {
 }
 
 SpaceInvadersScene::SpaceInvadersScene()
-    : player(nullptr),
+    : background(nullptr),
+      player(nullptr),
       score(0),
       lives(3),
       gameOver(false),
@@ -235,7 +319,10 @@ SpaceInvadersScene::SpaceInvadersScene()
       fireInputReady(false),
       currentMusicTempoFactor(1.0f) {
 
-    // Initialize enemy explosion slots as inactive.
+    initStarfield();
+    background = new TilemapBackground(STARFIELD_MAP);
+    addEntity(background);
+
     for (int i = 0; i < MaxEnemyExplosions; ++i) {
         enemyExplosions[i].active = false;
         enemyExplosions[i].x = 0.0f;
@@ -246,6 +333,10 @@ SpaceInvadersScene::SpaceInvadersScene()
 
 SpaceInvadersScene::~SpaceInvadersScene() {
     cleanup();
+    if (background) {
+        delete background;
+        background = nullptr;
+    }
 }
 
 void SpaceInvadersScene::init() {
@@ -280,12 +371,23 @@ void SpaceInvadersScene::cleanup() {
 void SpaceInvadersScene::resetGame() {
     cleanup();
 
-    // Spawn Player
+    if (background) {
+        addEntity(background);
+    }
+
     player = new PlayerActor(PLAYER_START_X, PLAYER_START_Y);
     addEntity(player);
 
     spawnAliens();
     spawnBunkers();
+
+    projectiles.reserve(MaxProjectiles);
+    for (int i = 0; i < MaxProjectiles; ++i) {
+        ProjectileActor* projectile = new ProjectileActor(0.0f, -PROJECTILE_HEIGHT, ProjectileType::PLAYER_BULLET);
+        projectile->deactivate();
+        projectiles.push_back(projectile);
+        addEntity(projectile);
+    }
 
     score = 0;
     lives = 3;
@@ -384,29 +486,22 @@ void SpaceInvadersScene::update(unsigned long deltaTime) {
             if (!hasPlayerBullet) {
                 float px = player->x + (PLAYER_WIDTH - PROJECTILE_WIDTH) / 2.0f;
                 float py = player->y - PROJECTILE_HEIGHT;
-                ProjectileActor* bullet = new ProjectileActor(px, py, ProjectileType::PLAYER_BULLET);
-                projectiles.push_back(bullet);
-                addEntity(bullet);
 
-                AudioEvent event{};
-                event.type = WaveType::PULSE;
-                event.frequency = 880.0f;
-                event.duration = 0.08f;
-                event.volume = 0.4f;
-                event.duty = 0.5f;
-                engine.getAudioEngine().playEvent(event);
+                for (auto* proj : projectiles) {
+                    if (!proj->isActive()) {
+                        proj->reset(px, py, ProjectileType::PLAYER_BULLET);
+
+                        AudioEvent event{};
+                        event.type = WaveType::PULSE;
+                        event.frequency = 880.0f;
+                        event.duration = 0.08f;
+                        event.volume = 0.4f;
+                        event.duty = 0.5f;
+                        engine.getAudioEngine().playEvent(event);
+                        break;
+                    }
+                }
             }
-        }
-    }
-
-    for (auto it = projectiles.begin(); it != projectiles.end(); ) {
-        ProjectileActor* proj = *it;
-        if (!proj->isActive()) {
-            removeEntity(proj);
-            delete proj;
-            it = projectiles.erase(it);
-        } else {
-            ++it;
         }
     }
 
@@ -634,9 +729,12 @@ void SpaceInvadersScene::enemyShoot() {
     float sx = shooter->x + shooter->width / 2.0f;
     float sy = shooter->y + shooter->height;
 
-    ProjectileActor* bullet = new ProjectileActor(sx, sy, ProjectileType::ENEMY_BULLET);
-    projectiles.push_back(bullet);
-    addEntity(bullet);
+    for (auto* proj : projectiles) {
+        if (!proj->isActive()) {
+            proj->reset(sx, sy, ProjectileType::ENEMY_BULLET);
+            break;
+        }
+    }
 }
 
 int SpaceInvadersScene::getActiveAlienCount() const {

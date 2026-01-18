@@ -11,6 +11,46 @@ namespace pong {
 
 using Color = pr32::graphics::Color;
 
+class PongBackground : public pr32::core::Entity {
+public:
+    PongBackground(int top, int bottom)
+        : pr32::core::Entity(0.0f, 0.0f, 0, 0, pr32::core::EntityType::GENERIC),
+          playAreaTop(top),
+          playAreaBottom(bottom) {
+        setRenderLayer(0);
+    }
+
+    void update(unsigned long) override {
+    }
+
+    void draw(pr32::graphics::Renderer& renderer) override {
+        int screenWidth = renderer.getWidth();
+        int screenHeight = renderer.getHeight();
+
+        renderer.drawFilledRectangle(0, 0, screenWidth, playAreaTop, Color::DarkGray);
+        renderer.drawFilledRectangle(0, playAreaBottom, screenWidth, screenHeight - playAreaBottom, Color::DarkGray);
+
+        renderer.drawLine(0, playAreaTop, screenWidth, playAreaTop, Color::White);
+        renderer.drawLine(0, playAreaBottom, screenWidth, playAreaBottom, Color::White);
+
+        int16_t centerX = screenWidth / 2;
+        int16_t dashHeight = 10;
+        int16_t dashGap = 5;
+
+        for (int16_t y = 0; y < screenHeight; y += dashHeight + dashGap) {
+            int16_t dashEnd = y + dashHeight;
+            if (dashEnd > screenHeight) {
+                dashEnd = screenHeight;
+            }
+            renderer.drawLine(centerX, y, centerX, dashEnd, Color::LightGray);
+        }
+    }
+
+private:
+    int playAreaTop;
+    int playAreaBottom;
+};
+
 void PongScene::init() {
     int screenWidth = engine.getRenderer().getWidth();
     int screenHeight = engine.getRenderer().getHeight();
@@ -22,6 +62,8 @@ void PongScene::init() {
     leftScore = 0;
     rightScore = 0;
     gameOver = false;
+
+    addEntity(new PongBackground(playAreaTop, playAreaBottom));
 
     leftPaddle = new PaddleActor(0, screenHeight/2 - PADDLE_HEIGHT/2, PADDLE_WIDTH, PADDLE_HEIGHT, false);
     leftPaddle->setTopLimit(playAreaTop);
@@ -111,40 +153,13 @@ void PongScene::update(unsigned long deltaTime) {
 }
 
 void PongScene::draw(pr32::graphics::Renderer& renderer) {
-    int screenWidth = engine.getRenderer().getWidth();
-    int screenHeight = engine.getRenderer().getHeight();
-
-    // === BORDERS ===
-    // Use display width from renderer or Config if available. 
-    // Assuming screenWidth covers the display.
-    renderer.drawFilledRectangle(0, 0, screenWidth, playAreaTop, Color::DarkGray);
-    renderer.drawFilledRectangle(0, playAreaBottom, screenWidth, 
-                    screenHeight - playAreaBottom, Color::DarkGray);
-
-    // Draw border lines
-    renderer.drawLine(0, playAreaTop, screenWidth, playAreaTop, Color::White);
-    renderer.drawLine(0, playAreaBottom, screenWidth, playAreaBottom, Color::White);
-
-    // === CENTER LINE ===
-    int16_t centerX = screenWidth / 2;
-    int16_t dashHeight = 10;
-    int16_t dashGap = 5;
-
-    for (int16_t y = 0; y < screenHeight; y += (dashHeight + dashGap)) {
-        int16_t dashEnd = y + dashHeight;
-        if (dashEnd > screenHeight) dashEnd = screenHeight;
-        renderer.drawLine(centerX, y, centerX, dashEnd, Color::LightGray);
-    }
-
     Scene::draw(renderer);
 
-    // === SCORE TEXT ===
     char scoreStr[16];
     snprintf(scoreStr, sizeof(scoreStr), "%d : %d", leftScore, rightScore);
-    int16_t scoreY = playAreaTop / 2 - 8; // Center vertically in top border
+    int16_t scoreY = playAreaTop / 2 - 8;
     renderer.drawTextCentered(scoreStr, scoreY, Color::Black, 2);
 
-    // === GAME STATE MESSAGES ===
     if (gameOver) {
         renderer.drawTextCentered("GAME OVER", 120, Color::White, 2);
         renderer.drawTextCentered("PRESS A TO START", 150, Color::White, 1);

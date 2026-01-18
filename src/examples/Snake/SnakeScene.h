@@ -23,12 +23,17 @@ enum Direction {
 class SnakeScene : public pixelroot32::core::Scene {
 public:
     SnakeScene();
+    ~SnakeScene();
     void init() override;
     void update(unsigned long deltaTime) override;
     void draw(pixelroot32::graphics::Renderer& renderer) override;
 
 private:
+    static constexpr int MaxSnakeSegments = GRID_WIDTH * GRID_HEIGHT;
+    class SnakeBackground;
+    SnakeBackground* background;
     std::vector<SnakeSegmentActor*> snakeSegments;
+    std::vector<SnakeSegmentActor*> segmentPool;
     Point food;
     Direction dir;
     Direction nextDir;

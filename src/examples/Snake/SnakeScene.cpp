@@ -11,13 +11,56 @@ extern pr32::core::Engine engine;
 
 namespace snake {
 
+class SnakeScene::SnakeBackground : public pr32::core::Entity {
+public:
+    SnakeBackground()
+        : pr32::core::Entity(0.0f, 0.0f, DISPLAY_WIDTH, DISPLAY_HEIGHT, pr32::core::EntityType::GENERIC) {
+        setRenderLayer(0);
+    }
+
+    void update(unsigned long) override {
+    }
+
+    void draw(pr32::graphics::Renderer& renderer) override {
+        using Color = pr32::graphics::Color;
+        renderer.drawFilledRectangle(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, Color::Black);
+
+        int playAreaX = 0;
+        int playAreaY = TOP_UI_GRID_ROWS * CELL_SIZE;
+        int playAreaW = GRID_WIDTH * CELL_SIZE - 1;
+        int playAreaH = (GRID_HEIGHT - TOP_UI_GRID_ROWS) * CELL_SIZE - 1;
+        renderer.drawRectangle(playAreaX, playAreaY, playAreaW, playAreaH, Color::DarkGreen);
+    }
+};
+
 SnakeScene::SnakeScene()
-    : dir(DIR_RIGHT),
+    : background(nullptr),
+      dir(DIR_RIGHT),
       nextDir(DIR_RIGHT),
       score(0),
       gameOver(false),
       lastMoveTime(0),
       moveInterval(INITIAL_MOVE_INTERVAL_MS) {
+    background = new SnakeBackground();
+    addEntity(background);
+}
+
+SnakeScene::~SnakeScene() {
+    for (auto* segment : snakeSegments) {
+        removeEntity(segment);
+    }
+    snakeSegments.clear();
+
+    for (auto* segment : segmentPool) {
+        delete segment;
+    }
+    segmentPool.clear();
+
+    if (background) {
+        removeEntity(background);
+        delete background;
+        background = nullptr;
+    }
 }
 
 void SnakeScene::init() {
@@ -30,9 +73,16 @@ void SnakeScene::init() {
 }
 
 void SnakeScene::resetGame() {
+    if (segmentPool.empty()) {
+        segmentPool.reserve(MaxSnakeSegments);
+        for (int i = 0; i < MaxSnakeSegments; ++i) {
+            auto* segment = new SnakeSegmentActor(0, 0, false);
+            segmentPool.push_back(segment);
+        }
+    }
+
     for (auto* segment : snakeSegments) {
         removeEntity(segment);
-        delete segment;
     }
     snakeSegments.clear();
 
@@ -44,7 +94,10 @@ void SnakeScene::resetGame() {
         int x = centerX - i;
         int y = centerY;
         bool head = (i == 0);
-        auto* segment = new SnakeSegmentActor(x, y, head);
+        SnakeSegmentActor* segment = segmentPool[i];
+        segment->setCellPosition(x, y);
+        segment->resetAlive();
+        segment->setHead(head);
         snakeSegments.push_back(segment);
         addEntity(segment);
     }
@@ -146,27 +199,36 @@ void SnakeScene::update(unsigned long deltaTime) {
         bool ateFood = (newX == food.x && newY == food.y);
 
         if (ateFood) {
-            auto* newHeadSegment = new SnakeSegmentActor(newX, newY, true);
-            snakeSegments.insert(snakeSegments.begin(), newHeadSegment);
-            addEntity(newHeadSegment);
-
-            for (size_t i = 1; i < snakeSegments.size(); ++i) {
-                snakeSegments[i]->setHead(false);
+            SnakeSegmentActor* newHeadSegment = nullptr;
+            if (snakeSegments.size() < segmentPool.size()) {
+                newHeadSegment = segmentPool[snakeSegments.size()];
             }
+            if (newHeadSegment) {
+                newHeadSegment->setCellPosition(newX, newY);
+                newHeadSegment->resetAlive();
+                newHeadSegment->setHead(true);
 
-            score += SCORE_PER_FOOD;
-            spawnFood();
-            pr32::audio::AudioEvent eatEv{};
-            eatEv.type = pr32::audio::WaveType::PULSE;
-            eatEv.frequency = 1200.0f;
-            eatEv.duration = 0.12f;
-            eatEv.volume = 0.8f;
-            eatEv.duty = 0.5f;
-            audio.playEvent(eatEv);
-            if (moveInterval > MIN_MOVE_INTERVAL_MS) {
-                moveInterval -= MOVE_INTERVAL_STEP_MS;
-                if (moveInterval < MIN_MOVE_INTERVAL_MS) {
-                    moveInterval = MIN_MOVE_INTERVAL_MS;
+                snakeSegments.insert(snakeSegments.begin(), newHeadSegment);
+                addEntity(newHeadSegment);
+
+                for (size_t i = 1; i < snakeSegments.size(); ++i) {
+                    snakeSegments[i]->setHead(false);
+                }
+
+                score += SCORE_PER_FOOD;
+                spawnFood();
+                pr32::audio::AudioEvent eatEv{};
+                eatEv.type = pr32::audio::WaveType::PULSE;
+                eatEv.frequency = 1200.0f;
+                eatEv.duration = 0.12f;
+                eatEv.volume = 0.8f;
+                eatEv.duty = 0.5f;
+                audio.playEvent(eatEv);
+                if (moveInterval > MIN_MOVE_INTERVAL_MS) {
+                    moveInterval -= MOVE_INTERVAL_STEP_MS;
+                    if (moveInterval < MIN_MOVE_INTERVAL_MS) {
+                        moveInterval = MIN_MOVE_INTERVAL_MS;
+                    }
                 }
             }
         } else {
@@ -210,14 +272,6 @@ void SnakeScene::update(unsigned long deltaTime) {
 
 void SnakeScene::draw(pr32::graphics::Renderer& renderer) {
     using Color = pr32::graphics::Color;
-
-    renderer.drawFilledRectangle(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, Color::Black);
-
-    int playAreaX = 0;
-    int playAreaY = TOP_UI_GRID_ROWS * CELL_SIZE;
-    int playAreaW = GRID_WIDTH * CELL_SIZE - 1;
-    int playAreaH = (GRID_HEIGHT - TOP_UI_GRID_ROWS) * CELL_SIZE - 1;
-    renderer.drawRectangle(playAreaX, playAreaY, playAreaW, playAreaH, Color::DarkGreen);
 
     int fx = food.x * CELL_SIZE;
     int fy = food.y * CELL_SIZE;

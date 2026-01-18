@@ -23,6 +23,7 @@ BallActor::BallActor(float x, float y, float initialSpeed, int radius)
     vx = 0;
     vy = 0;
 
+    setRenderLayer(1);
     setCollisionLayer(Layers::BALL);
     setCollisionMask(Layers::PADDLE);
 }

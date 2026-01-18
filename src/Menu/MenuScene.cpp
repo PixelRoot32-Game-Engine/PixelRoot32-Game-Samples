@@ -21,28 +21,44 @@ spaceinvaders::SpaceInvadersScene spaceInvadersScene;
 
 using Color = pr32::graphics::Color;
 
+class MenuBackground : public pr32::core::Entity {
+public:
+    MenuBackground()
+        : pr32::core::Entity(0.0f, 0.0f, DISPLAY_WIDTH, DISPLAY_HEIGHT, pr32::core::EntityType::GENERIC) {
+        setRenderLayer(0);
+    }
+
+    void update(unsigned long) override {
+    }
+
+    void draw(pr32::graphics::Renderer& renderer) override {
+        renderer.drawFilledRectangle(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, Color::Black);
+    }
+};
+
 void MenuScene::init() {
     int screenWidth = engine.getRenderer().getWidth();
     int screenHeight = engine.getRenderer().getHeight();
 
     float cx = screenWidth / 2;
-    
-    // Title
-    titleLabel = new pr32::graphics::ui::UILabel("GAME SELECT", 0, menu::TITLE_Y, Color::White, menu::TITLE_FONT_SIZE); 
+
+    addEntity(new MenuBackground());
+
+    titleLabel = new pr32::graphics::ui::UILabel("GAME SELECT", 0, menu::TITLE_Y, Color::White, menu::TITLE_FONT_SIZE);
     titleLabel->centerX(screenWidth);
+    titleLabel->setRenderLayer(2);
     addEntity(titleLabel);
 
-    // Buttons
     float btnW = menu::BTN_WIDTH;
     float btnH = menu::BTN_HEIGHT;
     float btnX = cx - (btnW / 2.0f);
     float startY = menu::BTN_START_Y;
     float gap = menu::BTN_GAP;
 
-    // Use index 4 (Space/Action) for the activation button
     pongButton = new pr32::graphics::ui::UIButton("PONG", menu::BTN_SELECT, btnX, startY, btnW, btnH, []() {
         engine.setScene(&pongScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+    pongButton->setRenderLayer(2);
     addEntity(pongButton);
 
     float stepY = btnH + gap;
@@ -50,26 +66,29 @@ void MenuScene::init() {
     tttButton = new pr32::graphics::ui::UIButton("TIC TAC TOE", menu::BTN_SELECT, btnX, startY + stepY, btnW, btnH, []() {
         engine.setScene(&tttScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+    tttButton->setRenderLayer(2);
     addEntity(tttButton);
 
     snakeButton = new pr32::graphics::ui::UIButton("SNAKE", menu::BTN_SELECT, btnX, startY + 2*stepY, btnW, btnH, []() {
         engine.setScene(&snakeScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+    snakeButton->setRenderLayer(2);
     addEntity(snakeButton);
 
     spaceInvadersButton = new pr32::graphics::ui::UIButton("SPACE INVADERS", menu::BTN_SELECT, btnX, startY + 3*stepY, btnW, btnH, []() {
         engine.setScene(&spaceInvadersScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+    spaceInvadersButton->setRenderLayer(2);
     addEntity(spaceInvadersButton);
 
-    // Footer - Instructions
-    // Cyan color for footer
     lblNavigate = new pr32::graphics::ui::UILabel("UP/DOWN: Navigate", 0, screenHeight - menu::NAV_INSTR_Y_OFFSET, Color::Cyan, menu::INSTRUCTION_FONT_SIZE);
     lblNavigate->centerX(screenWidth);
+    lblNavigate->setRenderLayer(2);
     addEntity(lblNavigate);
 
     lblSelect = new pr32::graphics::ui::UILabel("A: Select", 0, screenHeight - menu::SEL_INSTR_Y_OFFSET, Color::Cyan, menu::INSTRUCTION_FONT_SIZE);
     lblSelect->centerX(screenWidth);
+    lblSelect->setRenderLayer(2);
     addEntity(lblSelect);
 
     selectedIndex = -1;
@@ -156,6 +175,5 @@ void MenuScene::updateButtonStyles() {
 }
 
 void MenuScene::draw(pixelroot32::graphics::Renderer& renderer) {
-    renderer.drawFilledRectangle(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, pixelroot32::graphics::Color::Black);
     Scene::draw(renderer);
 }
