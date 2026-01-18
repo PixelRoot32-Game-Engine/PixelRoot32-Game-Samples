@@ -569,6 +569,7 @@ void SpaceInvadersScene::update(unsigned long deltaTime) {
     updateMusicTempo();
 }
 
+// Advance the alien formation in lockstep, synced with the current music tempo.
 void SpaceInvadersScene::updateAliens(unsigned long deltaTime) {
     // Scaled time accumulation for movement sync
     float scaledDelta = static_cast<float>(deltaTime) * currentMusicTempoFactor;
@@ -632,6 +633,7 @@ void SpaceInvadersScene::updateAliens(unsigned long deltaTime) {
     }
 }
 
+// Resolve projectile collisions against aliens, bunkers, and the player using swept-circle tests.
 void SpaceInvadersScene::handleCollisions() {
     using pixelroot32::physics::Circle;
     using pixelroot32::physics::sweepCircleVsRect;
@@ -760,6 +762,7 @@ void SpaceInvadersScene::handleCollisions() {
     }
 }
 
+// Select a bottom-most alien and fire an enemy bullet with difficulty-based chance.
 void SpaceInvadersScene::enemyShoot() {
     std::vector<AlienActor*> bottomAliens;
     for (auto* candidate : aliens) {
@@ -872,6 +875,7 @@ void SpaceInvadersScene::draw(pr32::graphics::Renderer& renderer) {
     }
 }
 
+// Smoothly adjust background music tempo based on how close the lowest alien row is to the player.
 void SpaceInvadersScene::updateMusicTempo() {
     if (gameOver) return;
 
@@ -987,6 +991,7 @@ void SpaceInvadersScene::spawnEnemyExplosion(float x, float y) {
     }
 }
 
+// Handle player damage, trigger explosion, and transition into a temporary pause state.
 void SpaceInvadersScene::handlePlayerHit() {
     if (lives > 0) {
         lives -= 1;
@@ -1023,6 +1028,7 @@ void SpaceInvadersScene::handlePlayerHit() {
     isPaused = true;
 }
 
+// Respawn the player under the first intact bunker and resume normal gameplay.
 void SpaceInvadersScene::respawnPlayerUnderBunker() {
     if (!player) {
         return;

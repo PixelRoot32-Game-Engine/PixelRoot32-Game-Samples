@@ -68,6 +68,7 @@ static TileMap PLATFORMER_MAP = {
     static_cast<uint16_t>(sizeof(PLATFORMER_TILES) / sizeof(pixelroot32::graphics::Sprite))
 };
 
+// Build the scrolling platformer tilemap and precompute platform collision rectangles.
 static void initPlatformerTilemap() {
     static bool initialized = false;
     if (initialized) {
@@ -140,6 +141,7 @@ CameraDemoScene::~CameraDemoScene() {
     }
 }
 
+// Initialize tilemap, create the player cube, and configure camera world bounds.
 void CameraDemoScene::init() {
     initPlatformerTilemap();
     jumpInputReady = false;
@@ -171,6 +173,7 @@ void CameraDemoScene::init() {
     camera.setPosition(0.0f, 0.0f);
 }
 
+// Read input, update the player cube, and move the camera to follow it.
 void CameraDemoScene::update(unsigned long deltaTime) {
     auto& input = engine.getInputManager();
 
@@ -205,6 +208,7 @@ void CameraDemoScene::update(unsigned long deltaTime) {
     }
 }
 
+// Render parallax background layers, tilemap world, and player based on camera X.
 void CameraDemoScene::draw(pr32::graphics::Renderer& renderer) {
     float camX = camera.getX();
 

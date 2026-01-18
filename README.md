@@ -9,8 +9,12 @@ It wires the engine to:
 - an **ESP32 + TFT_eSPI display + buttons + speaker**, and
 - a **native desktop build (SDL2)** for fast iteration without hardware.
 
-From a simple menu you can launch four example games shipped with the engine:
-**Pong**, **Brick Breaker**, **Tic‑Tac‑Toe**, and **Geometry Jump**.
+From a simple menu you can launch several example games shipped with the engine,
+such as **Pong**, **Snake**, **Space Invaders**, **Tic‑Tac‑Toe**, and the
+**Camera Demo**. For deeper engine walk‑throughs based on real games, see:
+[`Space Invaders`](#example-space-invaders--engine-overview),
+[`CameraDemo`](#example-camerademo--camera-parallax-and-platforms),
+and [`Snake`](#example-snake--entity-pooling-and-discrete-game-loop) below.
 
 ---
 
@@ -88,7 +92,7 @@ GameSample/
 ├── lib/
 │   └── PixelRoot32-Game-Engine/ # The Game Engine Library
 ├── src/                    # Source code
-│   ├── examples/           # Example games (Pong, BrickBreaker, etc.)
+│   ├── examples/           # Example games (Pong, Snake, SpaceInvaders, etc.)
 │   ├── drivers/            # Hardware-specific drivers (TFT_eSPI, SDL2)
 │   ├── Menu/               # Main Menu Scene
 │   ├── main.cpp            # Entry point for ESP32
@@ -149,6 +153,182 @@ void loop() {
 The native entry point in [`src/main_native.cpp`](src/main_native.cpp) is
 almost identical but replaces the drawer and audio backend with SDL2‑based
 implementations and uses `int main(...)` instead of Arduino’s `setup/loop`.
+
+---
+
+## Example: Space Invaders – Engine Overview
+
+The **Space Invaders** example (under
+[`src/examples/SpaceInvaders`](src/examples/SpaceInvaders)) shows how to build
+ a complete game on top of PixelRoot32. It is a good reference for
+ understanding how scenes, entities, rendering, input, audio, and collisions
+ work together.
+
+### Core architecture
+
+- The global `Engine` provides access to the renderer, input manager, audio
+  engine, and music player.
+- `SpaceInvadersScene` derives from `pixelroot32::core::Scene` and implements
+  the usual lifecycle:
+  - `init()` to set up the game and start background music.
+  - `update(deltaTime)` to handle gameplay logic each frame.
+  - `draw(renderer)` (inherited from `Scene`) to draw all entities.
+- The scene owns and manages entities such as the player, aliens, bunkers,
+  projectiles, and background.
+
+### Entities and game objects
+
+Space Invaders uses several entity types:
+
+- `PlayerActor` for the player ship, reading input and exposing `wantsToShoot()`.
+- `AlienActor` for each enemy, with its own hit box, animation, and score value.
+- `ProjectileActor` for both player and enemy bullets, distinguished by a
+  `ProjectileType`. The scene keeps a fixed pool of projectiles and activates
+  or deactivates them as needed instead of allocating during gameplay.
+- `BunkerActor` for destructible cover, with simple health/damage logic.
+- `TilemapBackground`, a small `Entity` that draws a starfield tilemap.
+
+All of these derive from `Entity` and are registered with the scene via
+`addEntity(...)`, so the engine can update and draw them automatically.
+
+### Rendering
+
+The example uses a mix of tilemaps, sprites, and simple effects:
+
+- A tilemap (`STARFIELD_MAP`) is used for the starfield background.
+- Aliens, player, bunkers, and bullets are drawn as sprites in front of the
+  background.
+- A small `ExplosionAnimation` object handles the player explosion using a few
+  1bpp sprites and a simple frame-advance timer.
+- Render layers ensure the background is drawn first and gameplay entities on
+  top.
+
+### Input and player control
+
+- The player reads horizontal input and fire button state from the engine’s
+  `InputManager`.
+- `SpaceInvadersScene` enforces high-level rules such as:
+  - Only allowing one active player bullet at a time.
+  - Requiring the fire button to be released before another shot is accepted
+    (`fireInputReady` flag).
+
+This separation keeps low-level movement inside the player actor, and
+game-design rules inside the scene.
+
+### Audio: SFX and music
+
+The example demonstrates both **sound effects** and **music**:
+
+- Sound effects use `AudioEvent` with parameters such as `WaveType`, frequency,
+  duration, volume, and duty cycle.
+- Music is defined as arrays of `MusicNote` and wrapped in `MusicTrack`
+  objects, then played via `engine.getMusicPlayer().play(track)`.
+- Different background tracks (slow/medium/fast) and `setTempoFactor()` are
+  used to synchronize music tempo with alien movement speed as enemies are
+  cleared, reproducing the classic “tension ramp” of Space Invaders.
+
+### Collisions and game state
+
+- Player bullets use swept-circle vs rectangle tests (`sweepCircleVsRect`)
+  between their previous and current positions to robustly hit fast-moving
+  targets.
+- Additional axis-aligned rectangle checks (`getHitBox().intersects(...)`)
+  are used as a simple fallback.
+- Similar logic is used for enemy bullets against bunkers and the player.
+- The scene tracks game state:
+  - Active gameplay.
+  - Player hit (temporary pause while the explosion plays, then respawn).
+  - Win and loss conditions, with appropriate music cues.
+
+Space Invaders is the recommended example to study first when you want to
+understand how to structure a full game on top of PixelRoot32.
+
+---
+
+## Example: CameraDemo – Camera, Parallax and Platforms
+
+The **CameraDemo** example (under
+[`src/examples/CameraDemo`](src/examples/CameraDemo)) focuses on horizontal
+ scrolling worlds, camera following, parallax backgrounds, and simple
+ platform physics.
+
+### World vs screen
+
+- The level is defined as a tilemap wider than the display.
+- The player (`PlayerCube`) has a world size via `setWorldSize`, while the
+  camera defines which portion of the world is visible.
+- `CameraDemoScene` configures horizontal camera bounds based on the total
+  level width so the camera never scrolls outside the playable area.
+
+### Camera following and parallax
+
+- The camera tracks the player by following the center of the cube
+  (`camera.followTarget(centerX, centerY)`).
+- The renderer uses `setDisplayOffset` with different factors to draw:
+  - A far background layer (hills/sky) scrolling slowly.
+  - A mid-ground layer scrolling at medium speed.
+  - The main tilemap and player scrolling at full speed.
+- This produces a cheap but effective parallax effect suitable for ESP32.
+
+### Tilemap and platforms
+
+- The ground and platforms are encoded in a tilemap using a small set of
+  1bpp sprites (empty, ground, platform).
+- A fixed array of `PlatformRect` records the collision geometry derived
+  from the tilemap (world coordinates and sizes).
+- The player update receives this platform list and performs platform-style
+  collision and jumping on top of it.
+
+CameraDemo is the best reference for building side-scrolling or platformer
+games with camera tracking and parallax backgrounds.
+
+---
+
+## Example: Snake – Entity Pooling and Discrete Game Loop
+
+The **Snake** example (under [`src/examples/Snake`](src/examples/Snake))
+ demonstrates how to build a grid-based game with a discrete tick loop and
+ no dynamic allocations during gameplay.
+
+### Scene structure and background
+
+- `SnakeScene` derives from `Scene` and owns all game state: snake segments,
+  food position, score, direction, timers, and game-over flags.
+- A small `SnakeBackground` entity draws the playfield border and reserves
+  the top rows for UI.
+
+### Entity pooling
+
+- The game pre-allocates a pool of `SnakeSegmentActor` objects once and
+  reuses them to represent the snake body.
+- `snakeSegments` is an array view into this pool; segments are moved,
+  inserted, or reused instead of constructing new actors.
+- This pattern avoids runtime allocation and is ideal for constrained
+  targets like the ESP32.
+
+### Grid-based movement and timing
+
+- The snake moves on a logical grid (`GRID_WIDTH`, `GRID_HEIGHT`,
+  `CELL_SIZE`).
+- Movement is driven by a discrete timer: when `now - lastMoveTime` exceeds
+  `moveInterval`, the head advances one cell.
+- Each time the snake eats food, score increases, a new segment is added
+  (reusing the pool), and `moveInterval` is reduced down to a minimum to
+  increase difficulty.
+
+### Input, collisions, and HUD
+
+- Input (up/down/left/right) changes the next direction, with simple rules
+  to forbid immediate reversal (e.g., from up to down).
+- Collision rules:
+  - Leaving the board area triggers game over.
+  - The head touching a “dead” segment or invalid state also triggers
+    game over.
+- The HUD shows the score and a “GAME OVER / press to restart” message;
+  short audio cues differentiate moving, eating, and dying.
+
+Snake is a compact reference for building games with discrete time steps,
+pooled entities, and minimal but responsive feedback.
 
 ---
 

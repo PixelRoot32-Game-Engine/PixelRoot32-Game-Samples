@@ -63,6 +63,7 @@ SnakeScene::~SnakeScene() {
     }
 }
 
+// Seed the random generator once and reset the snake game state.
 void SnakeScene::init() {
     static bool seeded = false;
     if (!seeded) {
@@ -72,6 +73,7 @@ void SnakeScene::init() {
     resetGame();
 }
 
+// Rebuild the snake from the pooled segments and reset all game variables.
 void SnakeScene::resetGame() {
     if (segmentPool.empty()) {
         segmentPool.reserve(MaxSnakeSegments);
@@ -111,6 +113,7 @@ void SnakeScene::resetGame() {
     spawnFood();
 }
 
+// Randomly place food on the grid, avoiding any cell occupied by the snake.
 void SnakeScene::spawnFood() {
     bool valid = false;
     while (!valid) {
@@ -130,6 +133,7 @@ void SnakeScene::spawnFood() {
     }
 }
 
+// Main game loop: handle input, timed movement, growth, scoring, and game over.
 void SnakeScene::update(unsigned long deltaTime) {
     auto& input = engine.getInputManager();
     auto& audio = engine.getAudioEngine();
