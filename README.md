@@ -348,11 +348,12 @@ pooled entities, and minimal but responsive feedback.
 
 The **SpritesDemo** example (under [`src/examples/SpritesDemo`](src/examples/SpritesDemo)) is the **reference example for using 2bpp (2 bits per pixel) and 4bpp (4 bits per pixel) sprites**. It demonstrates how to render multi-colored characters efficiently using compact formats.
 
-### 2bpp Conversion Pipeline
+### Sprite Data Format
 
-- The source art is defined as **1bpp multilayer sprites** (separate layers for Black, LightBlue, White, etc.), which allows for easy editing and maintenance.
-- At runtime (in `initSprites2bpp`), these 1bpp layers are **automatically packed into a single 2bpp buffer**.
-- This pipeline combines the flexibility of layered editing with the performance and memory benefits of a packed 2bpp format (4 colors per sprite: Transparent + 3 colors).
+- The sprites are exported directly in **2bpp (2 bits per pixel)** and **4bpp (4 bits per pixel)** formats.
+- This allows for efficient storage and rendering without runtime conversion overhead.
+- **2bpp sprites** support 4 colors (Transparent + 3 colors) per sprite.
+- **4bpp sprites** support 16 colors (Transparent + 15 colors) per sprite.
 
 ### 4bpp Sprite Stress Test
 
