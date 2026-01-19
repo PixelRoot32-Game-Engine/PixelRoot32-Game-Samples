@@ -13,25 +13,8 @@ using pr32::graphics::SpriteAnimationFrame;
 
 namespace {
 
-template <unsigned int N>
-constexpr uint8_t spriteHeight(const uint16_t (&)[N]) {
-    return static_cast<uint8_t>(N);
-}
-
 static constexpr uint8_t SPRITE_WIDTH = 16;
-static constexpr uint8_t SPRITE_HEIGHT = spriteHeight(SPRITE_0_LAYER_0);
-
-static constexpr uint8_t SPRITE_2BPP_ROW_BYTES = static_cast<uint8_t>((SPRITE_WIDTH * 2 + 7) / 8);
-
-static uint8_t SPRITE_0_2BPP_DATA[SPRITE_HEIGHT * SPRITE_2BPP_ROW_BYTES] = {};
-static uint8_t SPRITE_1_2BPP_DATA[SPRITE_HEIGHT * SPRITE_2BPP_ROW_BYTES] = {};
-static uint8_t SPRITE_2_2BPP_DATA[SPRITE_HEIGHT * SPRITE_2BPP_ROW_BYTES] = {};
-static uint8_t SPRITE_3_2BPP_DATA[SPRITE_HEIGHT * SPRITE_2BPP_ROW_BYTES] = {};
-static uint8_t SPRITE_4_2BPP_DATA[SPRITE_HEIGHT * SPRITE_2BPP_ROW_BYTES] = {};
-static uint8_t SPRITE_5_2BPP_DATA[SPRITE_HEIGHT * SPRITE_2BPP_ROW_BYTES] = {};
-static uint8_t SPRITE_6_2BPP_DATA[SPRITE_HEIGHT * SPRITE_2BPP_ROW_BYTES] = {};
-static uint8_t SPRITE_7_2BPP_DATA[SPRITE_HEIGHT * SPRITE_2BPP_ROW_BYTES] = {};
-static uint8_t SPRITE_8_2BPP_DATA[SPRITE_HEIGHT * SPRITE_2BPP_ROW_BYTES] = {};
+static constexpr uint8_t SPRITE_HEIGHT = 32;
 
 static const Color SPRITES_2BPP_PALETTE[] = {
     Color::Transparent,
@@ -40,78 +23,28 @@ static const Color SPRITES_2BPP_PALETTE[] = {
     Color::White
 };
 
-static Sprite2bpp SPRITE_0_2BPP = { SPRITE_0_2BPP_DATA, SPRITES_2BPP_PALETTE, SPRITE_WIDTH, SPRITE_HEIGHT, 4 };
-static Sprite2bpp SPRITE_1_2BPP = { SPRITE_1_2BPP_DATA, SPRITES_2BPP_PALETTE, SPRITE_WIDTH, SPRITE_HEIGHT, 4 };
-static Sprite2bpp SPRITE_2_2BPP = { SPRITE_2_2BPP_DATA, SPRITES_2BPP_PALETTE, SPRITE_WIDTH, SPRITE_HEIGHT, 4 };
-static Sprite2bpp SPRITE_3_2BPP = { SPRITE_3_2BPP_DATA, SPRITES_2BPP_PALETTE, SPRITE_WIDTH, SPRITE_HEIGHT, 4 };
-static Sprite2bpp SPRITE_4_2BPP = { SPRITE_4_2BPP_DATA, SPRITES_2BPP_PALETTE, SPRITE_WIDTH, SPRITE_HEIGHT, 4 };
-static Sprite2bpp SPRITE_5_2BPP = { SPRITE_5_2BPP_DATA, SPRITES_2BPP_PALETTE, SPRITE_WIDTH, SPRITE_HEIGHT, 4 };
-static Sprite2bpp SPRITE_6_2BPP = { SPRITE_6_2BPP_DATA, SPRITES_2BPP_PALETTE, SPRITE_WIDTH, SPRITE_HEIGHT, 4 };
-static Sprite2bpp SPRITE_7_2BPP = { SPRITE_7_2BPP_DATA, SPRITES_2BPP_PALETTE, SPRITE_WIDTH, SPRITE_HEIGHT, 4 };
-static Sprite2bpp SPRITE_8_2BPP = { SPRITE_8_2BPP_DATA, SPRITES_2BPP_PALETTE, SPRITE_WIDTH, SPRITE_HEIGHT, 4 };
+static const Sprite2bpp SPRITE_0_2BPP_STRUCT = { reinterpret_cast<const uint8_t*>(SPRITE_0_2BPP), SPRITES_2BPP_PALETTE, SPRITE_WIDTH, SPRITE_HEIGHT, 4 };
+static const Sprite2bpp SPRITE_1_2BPP_STRUCT = { reinterpret_cast<const uint8_t*>(SPRITE_1_2BPP), SPRITES_2BPP_PALETTE, SPRITE_WIDTH, SPRITE_HEIGHT, 4 };
+static const Sprite2bpp SPRITE_2_2BPP_STRUCT = { reinterpret_cast<const uint8_t*>(SPRITE_2_2BPP), SPRITES_2BPP_PALETTE, SPRITE_WIDTH, SPRITE_HEIGHT, 4 };
+static const Sprite2bpp SPRITE_3_2BPP_STRUCT = { reinterpret_cast<const uint8_t*>(SPRITE_3_2BPP), SPRITES_2BPP_PALETTE, SPRITE_WIDTH, SPRITE_HEIGHT, 4 };
+static const Sprite2bpp SPRITE_4_2BPP_STRUCT = { reinterpret_cast<const uint8_t*>(SPRITE_4_2BPP), SPRITES_2BPP_PALETTE, SPRITE_WIDTH, SPRITE_HEIGHT, 4 };
+static const Sprite2bpp SPRITE_5_2BPP_STRUCT = { reinterpret_cast<const uint8_t*>(SPRITE_5_2BPP), SPRITES_2BPP_PALETTE, SPRITE_WIDTH, SPRITE_HEIGHT, 4 };
+static const Sprite2bpp SPRITE_6_2BPP_STRUCT = { reinterpret_cast<const uint8_t*>(SPRITE_6_2BPP), SPRITES_2BPP_PALETTE, SPRITE_WIDTH, SPRITE_HEIGHT, 4 };
+static const Sprite2bpp SPRITE_7_2BPP_STRUCT = { reinterpret_cast<const uint8_t*>(SPRITE_7_2BPP), SPRITES_2BPP_PALETTE, SPRITE_WIDTH, SPRITE_HEIGHT, 4 };
+static const Sprite2bpp SPRITE_8_2BPP_STRUCT = { reinterpret_cast<const uint8_t*>(SPRITE_8_2BPP), SPRITES_2BPP_PALETTE, SPRITE_WIDTH, SPRITE_HEIGHT, 4 };
 
-static Sprite2bpp* SPRITES_2BPP[] = {
-    &SPRITE_0_2BPP,
-    &SPRITE_1_2BPP,
-    &SPRITE_2_2BPP,
-    &SPRITE_3_2BPP,
-    &SPRITE_4_2BPP,
-    &SPRITE_5_2BPP,
-    &SPRITE_6_2BPP,
-    &SPRITE_7_2BPP,
-    &SPRITE_8_2BPP
+static const Sprite2bpp* SPRITES_2BPP[] = {
+    &SPRITE_0_2BPP_STRUCT,
+    &SPRITE_1_2BPP_STRUCT,
+    &SPRITE_2_2BPP_STRUCT,
+    &SPRITE_3_2BPP_STRUCT,
+    &SPRITE_4_2BPP_STRUCT,
+    &SPRITE_5_2BPP_STRUCT,
+    &SPRITE_6_2BPP_STRUCT,
+    &SPRITE_7_2BPP_STRUCT,
+    &SPRITE_8_2BPP_STRUCT
 };
 
-static void packSpriteTo2bpp(const uint16_t* layer0,
-                             const uint16_t* layer1,
-                             const uint16_t* layer3,
-                             uint8_t* outData) {
-    for (uint8_t row = 0; row < SPRITE_HEIGHT; ++row) {
-        uint8_t* rowData = outData + row * SPRITE_2BPP_ROW_BYTES;
-
-        for (uint8_t col = 0; col < SPRITE_WIDTH; ++col) {
-            bool bit0 = layer0 && ((layer0[row] & (static_cast<uint16_t>(1u) << col)) != 0);
-            bool bit1 = layer1 && ((layer1[row] & (static_cast<uint16_t>(1u) << col)) != 0);
-            bool bit3 = layer3 && ((layer3[row] & (static_cast<uint16_t>(1u) << col)) != 0);
-
-            uint8_t index = 0;
-            if (bit3) {
-                index = 3;
-            } else if (bit1) {
-                index = 2;
-            } else if (bit0) {
-                index = 1;
-            }
-
-            uint8_t bitIndex = static_cast<uint8_t>(col * 2);
-            uint8_t byteIndex = static_cast<uint8_t>(bitIndex >> 3);
-            uint8_t shift = static_cast<uint8_t>(bitIndex & 7);
-
-            rowData[byteIndex] = static_cast<uint8_t>(
-                (rowData[byteIndex] & static_cast<uint8_t>(~(0x3u << shift))) |
-                static_cast<uint8_t>((index & 0x3u) << shift)
-            );
-        }
-    }
-}
-
-static void initSprites2bpp() {
-    static bool initialized = false;
-    if (initialized) {
-        return;
-    }
-    initialized = true;
-
-    packSpriteTo2bpp(SPRITE_0_LAYER_0, SPRITE_0_LAYER_1, SPRITE_0_LAYER_3, SPRITE_0_2BPP_DATA);
-    packSpriteTo2bpp(SPRITE_1_LAYER_0, SPRITE_1_LAYER_1, SPRITE_1_LAYER_3, SPRITE_1_2BPP_DATA);
-    packSpriteTo2bpp(SPRITE_2_LAYER_0, SPRITE_2_LAYER_1, SPRITE_2_LAYER_3, SPRITE_2_2BPP_DATA);
-    packSpriteTo2bpp(SPRITE_3_LAYER_0, SPRITE_3_LAYER_1, SPRITE_3_LAYER_3, SPRITE_3_2BPP_DATA);
-    packSpriteTo2bpp(SPRITE_4_LAYER_0, SPRITE_4_LAYER_1, SPRITE_4_LAYER_3, SPRITE_4_2BPP_DATA);
-    packSpriteTo2bpp(SPRITE_5_LAYER_0, SPRITE_5_LAYER_1, SPRITE_5_LAYER_3, SPRITE_5_2BPP_DATA);
-    packSpriteTo2bpp(SPRITE_6_LAYER_0, SPRITE_6_LAYER_1, SPRITE_6_LAYER_3, SPRITE_6_2BPP_DATA);
-    packSpriteTo2bpp(SPRITE_7_LAYER_0, SPRITE_7_LAYER_1, SPRITE_7_LAYER_3, SPRITE_7_2BPP_DATA);
-    packSpriteTo2bpp(SPRITE_8_LAYER_0, SPRITE_8_LAYER_1, SPRITE_8_LAYER_3, SPRITE_8_2BPP_DATA);
-}
 
 // --- Animation Groups ---
 // Note: We use empty frames here because we manually map the animation index 
@@ -212,7 +145,7 @@ public:
         }
 
         if (spriteIndex >= 0 && spriteIndex < static_cast<int>(sizeof(SPRITES_2BPP) / sizeof(SPRITES_2BPP[0]))) {
-            Sprite2bpp* sprite = SPRITES_2BPP[spriteIndex];
+            const Sprite2bpp* sprite = SPRITES_2BPP[spriteIndex];
             renderer.drawSprite(*sprite, drawX, drawY, false);
         }
     }
@@ -249,8 +182,6 @@ private:
 }
 
 void SpritesDemoScene::init() {
-    initSprites2bpp();
-
     float px = (DISPLAY_WIDTH - SPRITE_WIDTH) * 0.5f;
     float py = (DISPLAY_HEIGHT - SPRITE_HEIGHT) * 0.5f;
 
