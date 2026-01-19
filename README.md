@@ -109,7 +109,7 @@ Key files in this project:
 - [`src/main_native.cpp`](src/main_native.cpp) – entry point for **native** builds.
 - [`src/Menu/MenuScene.cpp`](src/Menu/MenuScene.cpp) – main menu and scene switching.
 - [`include/Config.h`](include/Config.h) – display resolution and shared config.
-- [`lib/PixelRoot32-Game-Engine`](lib/PixelRoot32-Game-Engine) – engine core library.
+- [`lib/PixelRoot32-Game-Engine`](https://github.com/Gperez88/PixelRoot32-Game-Engine) – engine core library.
 
 The engine is configured in `main.cpp` by creating the display, input, and
 audio backends and passing them to `pixelroot32::core::Engine`:
