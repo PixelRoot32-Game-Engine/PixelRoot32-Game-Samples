@@ -386,3 +386,10 @@ For detailed engine documentation, refer to:
 
 - [`lib/PixelRoot32-Game-Engine/README.md`](https://github.com/Gperez88/PixelRoot32-Game-Engine/blob/main/README.md)
 - [`lib/PixelRoot32-Game-Engine/API_REFERENCE.md`](https://github.com/Gperez88/PixelRoot32-Game-Engine/blob/main/API_REFERENCE.md)
+
+---
+
+## License
+GameSample is **open-source** under the **MIT License**.
+
+---
