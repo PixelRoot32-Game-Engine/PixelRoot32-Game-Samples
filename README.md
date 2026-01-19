@@ -156,13 +156,13 @@ implementations and uses `int main(...)` instead of Arduino’s `setup/loop`.
 
 ---
 
-## Example: Space Invaders – Engine Overview
+## Example: Space Invaders – Engine Overview & 1bpp Sprites
 
 The **Space Invaders** example (under
 [`src/examples/SpaceInvaders`](src/examples/SpaceInvaders)) shows how to build
- a complete game on top of PixelRoot32. It is a good reference for
- understanding how scenes, entities, rendering, input, audio, and collisions
- work together.
+a complete game on top of PixelRoot32.
+
+It serves as the **reference example for the standard 1bpp (monochrome) sprite system**, demonstrating how to use memory-efficient 1bpp bitmaps (defined as `uint16_t` arrays) for the majority of game assets. It is also the primary reference for understanding how scenes, entities, rendering, input, audio, and collisions work together.
 
 ### Core architecture
 
@@ -332,15 +332,15 @@ pooled entities, and minimal but responsive feedback.
 
 ---
 
-## Example: SpritesDemo – Multi-Layer Sprites & Animation Groups
+## Example: SpritesDemo – 2bpp Sprites & Animation Groups
 
-The **SpritesDemo** example (under [`src/examples/SpritesDemo`](src/examples/SpritesDemo)) showcases the engine's capability to render complex, multi-colored characters using layered 1bpp sprites and group-based animations.
+The **SpritesDemo** example (under [`src/examples/SpritesDemo`](src/examples/SpritesDemo)) is the **reference example for using 2bpp (2 bits per pixel) sprites**. It demonstrates how to render multi-colored characters efficiently using a compact format.
 
-### Multi-Layer Composition
+### 2bpp Conversion Pipeline
 
-- Each character is a `MultiSprite` composed of 4 separate 1bpp layers (`LAYER_0` to `LAYER_3`).
-- Each layer is assigned a specific color from the palette (Black, LightBlue, Yellow, Red), combining to form a rich, colorful sprite without requiring full RGB bitmaps.
-- This technique mimics NES/GameBoy-style sprite composition, saving memory while allowing for colorful assets.
+- The source art is defined as **1bpp multilayer sprites** (separate layers for Black, LightBlue, White, etc.), which allows for easy editing and maintenance.
+- At runtime (in `initSprites2bpp`), these 1bpp layers are **automatically packed into a single 2bpp buffer**.
+- This pipeline combines the flexibility of layered editing with the performance and memory benefits of a packed 2bpp format (4 colors per sprite: Transparent + 3 colors).
 
 ### Animation Groups & Switching
 
