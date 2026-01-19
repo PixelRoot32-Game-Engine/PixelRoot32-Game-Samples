@@ -51,6 +51,7 @@ static const MusicTrack WIN_MUSIC = {
 };
 
 void TicTacToeScene::init() {
+    pr32::graphics::setPalette(pr32::graphics::PaletteType::PR32);
     int screenWidth = engine.getRenderer().getWidth();
 
     int boardPixelWidth = BOARD_SIZE * CELL_SIZE;

@@ -143,6 +143,7 @@ CameraDemoScene::~CameraDemoScene() {
 
 // Initialize tilemap, create the player cube, and configure camera world bounds.
 void CameraDemoScene::init() {
+    pr32::graphics::setPalette(pr32::graphics::PaletteType::PR32);
     initPlatformerTilemap();
     jumpInputReady = false;
 

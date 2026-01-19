@@ -355,6 +355,7 @@ SpaceInvadersScene::~SpaceInvadersScene() {
 }
 
 void SpaceInvadersScene::init() {
+    pr32::graphics::setPalette(pr32::graphics::PaletteType::NES);
  #ifdef PIXELROOT32_ENABLE_SCENE_ARENA
     arena.init(SPACE_INVADERS_SCENE_ARENA_BUFFER, sizeof(SPACE_INVADERS_SCENE_ARENA_BUFFER));
 #endif

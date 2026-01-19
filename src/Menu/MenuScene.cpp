@@ -91,6 +91,7 @@ public:
 #endif
 
 void MenuScene::init() {
+    pr32::graphics::setPalette(pr32::graphics::PaletteType::PR32);
     int screenWidth = engine.getRenderer().getWidth();
     int screenHeight = engine.getRenderer().getHeight();
 

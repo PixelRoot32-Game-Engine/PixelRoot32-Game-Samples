@@ -10,8 +10,8 @@ It wires the engine to:
 - a **native desktop build (SDL2)** for fast iteration without hardware.
 
 From a simple menu you can launch several example games shipped with the engine,
-such as **Pong**, **Snake**, **Space Invaders**, **Tic‑Tac‑Toe**, and the
-**Camera Demo**. For deeper engine walk‑throughs based on real games, see:
+such as **Pong** (PICO8), **Snake** (GB), **Space Invaders** (NES), **Tic‑Tac‑Toe** (PR32), and the
+**Camera Demo** (PR32). For deeper engine walk‑throughs based on real games, see:
 [`Space Invaders`](#example-space-invaders--engine-overview),
 [`CameraDemo`](#example-camerademo--camera-parallax-and-platforms),
 and [`Snake`](#example-snake--entity-pooling-and-discrete-game-loop) below.
@@ -173,6 +173,8 @@ a complete game on top of PixelRoot32.
 
 It serves as the **reference example for the standard 1bpp (monochrome) sprite system**, demonstrating how to use memory-efficient 1bpp bitmaps (defined as `uint16_t` arrays) for the majority of game assets. It is also the primary reference for understanding how scenes, entities, rendering, input, audio, and collisions work together.
 
+**Color Palette**: NES
+
 ### Core architecture
 
 - The global `Engine` provides access to the renderer, input manager, audio
@@ -261,6 +263,8 @@ The **CameraDemo** example (under
  scrolling worlds, camera following, parallax backgrounds, and simple
  platform physics.
 
+**Color Palette**: PR32 (Default)
+
 ### World vs screen
 
 - The level is defined as a tilemap wider than the display.
@@ -347,6 +351,8 @@ pooled entities, and minimal but responsive feedback.
 > This demo relies on **2bpp** and **4bpp** sprite support, which are experimental features. Ensure `-D PIXELROOT32_ENABLE_2BPP_SPRITES` and `-D PIXELROOT32_ENABLE_4BPP_SPRITES` are enabled in your `platformio.ini`.
 
 The **SpritesDemo** example (under [`src/examples/SpritesDemo`](src/examples/SpritesDemo)) is the **reference example for using 2bpp (2 bits per pixel) and 4bpp (4 bits per pixel) sprites**. It demonstrates how to render multi-colored characters efficiently using compact formats.
+
+**Color Palette**: GBC (GameBoy Color)
 
 ### Sprite Data Format
 

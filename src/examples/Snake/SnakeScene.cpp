@@ -65,6 +65,7 @@ SnakeScene::~SnakeScene() {
 
 // Seed the random generator once and reset the snake game state.
 void SnakeScene::init() {
+    pr32::graphics::setPalette(pr32::graphics::PaletteType::GB);
     static bool seeded = false;
     if (!seeded) {
         std::srand(static_cast<unsigned int>(std::time(nullptr)));

@@ -164,6 +164,7 @@ private:
 }
 
 void SpritesDemoScene::init() {
+    pr32::graphics::setPalette(pr32::graphics::PaletteType::GBC);
     // 2BPP Sprite centered in the left half of the screen
     float px = (DISPLAY_WIDTH * 0.25f) - (SPRITE_WIDTH * 0.5f);
     float py = (DISPLAY_HEIGHT - SPRITE_HEIGHT) * 0.5f;
