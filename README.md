@@ -41,6 +41,15 @@ For the native desktop build:
 
 ## How to Build and Run
 
+### Experimental Features (2bpp & 4bpp Sprites)
+
+This project enables experimental sprite formats by default in `platformio.ini`:
+
+- `-D PIXELROOT32_ENABLE_2BPP_SPRITES`
+- `-D PIXELROOT32_ENABLE_4BPP_SPRITES`
+
+These features are **experimental**. If you encounter performance issues or compilation errors on your specific hardware, please **disable them** by commenting out these lines in `platformio.ini`. The `SpritesDemo` menu option will automatically disappear if 2bpp support is disabled.
+
 ### 1. Open the project
 
 - Clone this repository (or copy it into your own workspace).
@@ -332,15 +341,23 @@ pooled entities, and minimal but responsive feedback.
 
 ---
 
-## Example: SpritesDemo – 2bpp Sprites & Animation Groups
+## Example: SpritesDemo – 2bpp/4bpp Sprites & Animation Groups
 
-The **SpritesDemo** example (under [`src/examples/SpritesDemo`](src/examples/SpritesDemo)) is the **reference example for using 2bpp (2 bits per pixel) sprites**. It demonstrates how to render multi-colored characters efficiently using a compact format.
+> **⚠️ EXPERIMENTAL FEATURE WARNING**
+> This demo relies on **2bpp** and **4bpp** sprite support, which are experimental features. Ensure `-D PIXELROOT32_ENABLE_2BPP_SPRITES` and `-D PIXELROOT32_ENABLE_4BPP_SPRITES` are enabled in your `platformio.ini`.
+
+The **SpritesDemo** example (under [`src/examples/SpritesDemo`](src/examples/SpritesDemo)) is the **reference example for using 2bpp (2 bits per pixel) and 4bpp (4 bits per pixel) sprites**. It demonstrates how to render multi-colored characters efficiently using compact formats.
 
 ### 2bpp Conversion Pipeline
 
 - The source art is defined as **1bpp multilayer sprites** (separate layers for Black, LightBlue, White, etc.), which allows for easy editing and maintenance.
 - At runtime (in `initSprites2bpp`), these 1bpp layers are **automatically packed into a single 2bpp buffer**.
 - This pipeline combines the flexibility of layered editing with the performance and memory benefits of a packed 2bpp format (4 colors per sprite: Transparent + 3 colors).
+
+### 4bpp Sprite Stress Test
+
+- The demo also renders a **vertical stack of 15 4bpp sprites** centered on the screen.
+- This serves as a performance stress test for the experimental 4bpp rendering path, ensuring the engine can handle multiple higher-depth sprites simultaneously with 2bpp animations.
 
 ### Animation Groups & Switching
 

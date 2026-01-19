@@ -22,7 +22,9 @@ tictactoe::TicTacToeScene tttScene;
 snake::SnakeScene snakeScene;
 spaceinvaders::SpaceInvadersScene spaceInvadersScene;
 camerademo::CameraDemoScene cameraDemoScene;
+#ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
 spritesdemo::SpritesDemoScene spritesDemoScene;
+#endif
 
 using Color = pr32::graphics::Color;
 
@@ -143,11 +145,13 @@ void MenuScene::init() {
     cameraDemoButton->setRenderLayer(2);
     addEntity(cameraDemoButton);
 
+#ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
     spritesDemoButton = new pr32::graphics::ui::UIButton("SPRITES DEMO", menu::BTN_SELECT, btnX, startY + 5*stepY, btnW, btnH, []() {
         engine.setScene(&spritesDemoScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
     spritesDemoButton->setRenderLayer(2);
     addEntity(spritesDemoButton);
+#endif
 
     lblNavigate = new pr32::graphics::ui::UILabel("UP/DOWN: Navigate", 0, screenHeight - menu::NAV_INSTR_Y_OFFSET, Color::Cyan, menu::INSTRUCTION_FONT_SIZE);
     lblNavigate->centerX(screenWidth);
@@ -224,7 +228,9 @@ void MenuScene::update(unsigned long deltaTime) {
     snakeButton->handleInput(input);
     spaceInvadersButton->handleInput(input);
     cameraDemoButton->handleInput(input);
+#ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
     spritesDemoButton->handleInput(input);
+#endif
 }
 
 void MenuScene::updateButtonStyles() {
@@ -246,8 +252,10 @@ void MenuScene::updateButtonStyles() {
     cameraDemoButton->setSelected(selectedIndex == 4);
     cameraDemoButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 4));
 
+#ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
     spritesDemoButton->setSelected(selectedIndex == 5);
     spritesDemoButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 5));
+#endif
 }
 
 void MenuScene::draw(pixelroot32::graphics::Renderer& renderer) {

@@ -8,8 +8,7 @@ namespace spritesdemo {
 
 using pr32::graphics::Color;
 using pr32::graphics::Sprite2bpp;
-using pr32::graphics::SpriteAnimation;
-using pr32::graphics::SpriteAnimationFrame;
+using pr32::graphics::Sprite4bpp;
 
 namespace {
 
@@ -45,36 +44,38 @@ static const Sprite2bpp* SPRITES_2BPP[] = {
     &SPRITE_8_2BPP_STRUCT
 };
 
+#ifdef PIXELROOT32_ENABLE_4BPP_SPRITES
 
-// --- Animation Groups ---
-// Note: We use empty frames here because we manually map the animation index 
-// to our Sprite2bpp array in the draw() method. The engine's SpriteAnimation 
-// logic is only used here to track the current frame index and timing.
+static constexpr uint8_t POPUP_WIDTH = 16;
+static constexpr uint8_t POPUP_HEIGHT = 16;
 
-// Animation 0: Sprites 0-2
-static const SpriteAnimationFrame ANIM_0_FRAMES[] = {
-    { nullptr, nullptr },
-    { nullptr, nullptr },
-    { nullptr, nullptr }
+static const Color POPUP_PALETTE[] = {
+    Color::Transparent,
+    Color::Black,
+    Color::DarkGray,
+    Color::DarkRed,
+    Color::Purple,
+    Color::Brown,
+    Color::LightBlue,
+    Color::Red,
+    Color::Gold,
+    Color::LightRed,
+    Color::LightGray,
+    Color::Yellow,
+    Color::White,
+    Color::White,
+    Color::LightRed,
+    Color::Pink
 };
 
-// Animation 1: Sprites 3-4
-static const SpriteAnimationFrame ANIM_1_FRAMES[] = {
-    { nullptr, nullptr },
-    { nullptr, nullptr }
+static const uint16_t* SPRITES_4BPP_DATA[] = {
+    SPRITE_0_4BPP, SPRITE_1_4BPP, SPRITE_2_4BPP, SPRITE_3_4BPP,
+    SPRITE_4_4BPP, SPRITE_5_4BPP, SPRITE_6_4BPP, SPRITE_7_4BPP,
+    SPRITE_8_4BPP, SPRITE_9_4BPP, SPRITE_10_4BPP, SPRITE_11_4BPP,
+    SPRITE_12_4BPP, SPRITE_13_4BPP, SPRITE_14_4BPP
 };
 
-// Animation 2: Sprites 5-6
-static const SpriteAnimationFrame ANIM_2_FRAMES[] = {
-    { nullptr, nullptr },
-    { nullptr, nullptr }
-};
-
-// Animation 3: Sprites 7-8
-static const SpriteAnimationFrame ANIM_3_FRAMES[] = {
-    { nullptr, nullptr },
-    { nullptr, nullptr }
-};
+#endif
 
 
 class SpritesDemoBackground : public pr32::core::Entity {
@@ -97,27 +98,19 @@ public:
     SpritesDemoActor(float px, float py)
         : pr32::core::Entity(px, py, SPRITE_WIDTH, SPRITE_HEIGHT, pr32::core::EntityType::GENERIC),
           timeAccumulator(0),
-          switchTimer(0),
-          currentAnimGroup(0) {
+          currentFrame(0) {
         setRenderLayer(1);
-        setAnimationGroup(0);
     }
 
     void update(unsigned long deltaTime) override {
-        // Animation Step Logic
-        const unsigned long frameTimeMs = 150; // Slower for visibility
+        const unsigned long frameTimeMs = 150;
         timeAccumulator += deltaTime;
         while (timeAccumulator >= frameTimeMs) {
             timeAccumulator -= frameTimeMs;
-            animation.step();
-        }
-
-        // Animation Group Switching Logic (every 2 seconds)
-        switchTimer += deltaTime;
-        if (switchTimer >= 2000) {
-            switchTimer = 0;
-            currentAnimGroup = (currentAnimGroup + 1) % 4; // 0 -> 1 -> 2 -> 3 -> 0
-            setAnimationGroup(currentAnimGroup);
+            ++currentFrame;
+            if (currentFrame >= 3) {
+                currentFrame = 0;
+            }
         }
     }
 
@@ -125,24 +118,7 @@ public:
         int drawX = static_cast<int>(x);
         int drawY = static_cast<int>(y);
 
-        int spriteIndex = 0;
-        switch (currentAnimGroup) {
-            case 0:
-                spriteIndex = animation.current;
-                break;
-            case 1:
-                spriteIndex = 3 + animation.current;
-                break;
-            case 2:
-                spriteIndex = 5 + animation.current;
-                break;
-            case 3:
-                spriteIndex = 7 + animation.current;
-                break;
-            default:
-                spriteIndex = 0;
-                break;
-        }
+        int spriteIndex = currentFrame;
 
         if (spriteIndex >= 0 && spriteIndex < static_cast<int>(sizeof(SPRITES_2BPP) / sizeof(SPRITES_2BPP[0]))) {
             const Sprite2bpp* sprite = SPRITES_2BPP[spriteIndex];
@@ -151,42 +127,76 @@ public:
     }
 
 private:
-    SpriteAnimation animation;
     unsigned long timeAccumulator;
-    unsigned long switchTimer;
-    int currentAnimGroup;
-
-    void setAnimationGroup(int group) {
-        switch(group) {
-            case 0:
-                animation.frames = ANIM_0_FRAMES;
-                animation.frameCount = sizeof(ANIM_0_FRAMES) / sizeof(SpriteAnimationFrame);
-                break;
-            case 1:
-                animation.frames = ANIM_1_FRAMES;
-                animation.frameCount = sizeof(ANIM_1_FRAMES) / sizeof(SpriteAnimationFrame);
-                break;
-            case 2:
-                animation.frames = ANIM_2_FRAMES;
-                animation.frameCount = sizeof(ANIM_2_FRAMES) / sizeof(SpriteAnimationFrame);
-                break;
-            case 3:
-                animation.frames = ANIM_3_FRAMES;
-                animation.frameCount = sizeof(ANIM_3_FRAMES) / sizeof(SpriteAnimationFrame);
-                break;
-        }
-        animation.reset();
-    }
+    uint8_t currentFrame;
 };
+
+#ifdef PIXELROOT32_ENABLE_4BPP_SPRITES
+
+class SpritesPopupActor : public pr32::core::Entity {
+public:
+    SpritesPopupActor(float px, float py, const uint16_t* data)
+        : pr32::core::Entity(px, py, POPUP_WIDTH, POPUP_HEIGHT, pr32::core::EntityType::GENERIC) {
+        setRenderLayer(1);
+        
+        sprite.data = reinterpret_cast<const uint8_t*>(data);
+        sprite.palette = POPUP_PALETTE;
+        sprite.width = POPUP_WIDTH;
+        sprite.height = POPUP_HEIGHT;
+        sprite.paletteSize = static_cast<uint8_t>(sizeof(POPUP_PALETTE) / sizeof(Color));
+    }
+
+    void update(unsigned long) override {
+    }
+
+    void draw(pr32::graphics::Renderer& renderer) override {
+        int drawX = static_cast<int>(x);
+        int drawY = static_cast<int>(y);
+        renderer.drawSprite(sprite, drawX, drawY, false);
+    }
+
+private:
+    Sprite4bpp sprite;
+};
+
+#endif
 
 }
 
 void SpritesDemoScene::init() {
-    float px = (DISPLAY_WIDTH - SPRITE_WIDTH) * 0.5f;
+    // 2BPP Sprite centered in the left half of the screen
+    float px = (DISPLAY_WIDTH * 0.25f) - (SPRITE_WIDTH * 0.5f);
     float py = (DISPLAY_HEIGHT - SPRITE_HEIGHT) * 0.5f;
 
     addEntity(new SpritesDemoBackground());
     addEntity(new SpritesDemoActor(px, py));
+
+#ifdef PIXELROOT32_ENABLE_4BPP_SPRITES
+    int numSprites = sizeof(SPRITES_4BPP_DATA) / sizeof(SPRITES_4BPP_DATA[0]);
+    
+    // Grid configuration
+    const int cols = 3;
+    const int gap = 4;
+    
+    // Calculate grid dimensions
+    int rows = (numSprites + cols - 1) / cols;
+    float gridWidth = cols * POPUP_WIDTH + (cols - 1) * gap;
+    float gridHeight = rows * POPUP_HEIGHT + (rows - 1) * gap;
+
+    // Center grid in the right half of the screen
+    float startX = (DISPLAY_WIDTH * 0.75f) - (gridWidth * 0.5f);
+    float startY = (DISPLAY_HEIGHT - gridHeight) * 0.5f;
+
+    for (int i = 0; i < numSprites; ++i) {
+        int col = i % cols;
+        int row = i / cols;
+        
+        float popupX = startX + col * (POPUP_WIDTH + gap);
+        float popupY = startY + row * (POPUP_HEIGHT + gap);
+        
+        addEntity(new SpritesPopupActor(popupX, popupY, SPRITES_4BPP_DATA[i]));
+    }
+#endif
 }
 
 void SpritesDemoScene::update(unsigned long deltaTime) {

@@ -4,6 +4,7 @@
 #include "graphics/Color.h"
 #include "Config.h"
 #include "Sprites.h"
+#include "SpritesPopup.h"
 
 namespace spritesdemo {
 
@@ -15,4 +16,3 @@ public:
 };
 
 }
-

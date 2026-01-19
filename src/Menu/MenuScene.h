@@ -16,7 +16,9 @@ private:
     pixelroot32::graphics::ui::UIButton* snakeButton;
     pixelroot32::graphics::ui::UIButton* spaceInvadersButton;
     pixelroot32::graphics::ui::UIButton* cameraDemoButton;
+#ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
     pixelroot32::graphics::ui::UIButton* spritesDemoButton;
+#endif
     
     int selectedIndex = 0;
     void updateButtonStyles();
