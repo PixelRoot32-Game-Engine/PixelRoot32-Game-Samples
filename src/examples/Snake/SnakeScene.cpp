@@ -278,11 +278,11 @@ void SnakeScene::update(unsigned long deltaTime) {
 void SnakeScene::draw(pr32::graphics::Renderer& renderer) {
     using Color = pr32::graphics::Color;
 
+    pr32::core::Scene::draw(renderer);
+
     int fx = food.x * CELL_SIZE;
     int fy = food.y * CELL_SIZE;
     renderer.drawFilledRectangle(fx, fy, CELL_SIZE - 1, CELL_SIZE - 1, Color::Red);
-
-    pr32::core::Scene::draw(renderer);
 
     char scoreStr[16];
     std::snprintf(scoreStr, sizeof(scoreStr), "SCORE: %d", score);
