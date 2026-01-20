@@ -10,7 +10,7 @@ It wires the engine to:
 - a **native desktop build (SDL2)** for fast iteration without hardware.
 
 From a simple menu you can launch several example games shipped with the engine,
-such as **Pong** (PICO8), **Snake** (GB), **Space Invaders** (NES), **Tic‑Tac‑Toe** (PR32), and the
+such as **Pong** (PICO8), **Snake** (GB), **Space Invaders** (NES), **Tic‑Tac‑Toe** (Custom Neon), and the
 **Camera Demo** (PR32). For deeper engine walk‑throughs based on real games, see:
 [`Space Invaders`](#example-space-invaders--engine-overview),
 [`CameraDemo`](#example-camerademo--camera-parallax-and-platforms),
@@ -342,6 +342,23 @@ The **Snake** example (under [`src/examples/Snake`](src/examples/Snake))
 
 Snake is a compact reference for building games with discrete time steps,
 pooled entities, and minimal but responsive feedback.
+
+---
+
+## Example: Tic-Tac-Toe – AI & Custom Palette
+
+The **Tic-Tac-Toe** example (under [`src/examples/TicTacToe`](src/examples/TicTacToe)) demonstrates a simple turn-based game with a basic AI opponent.
+
+**Color Palette**: Custom Neon (User Defined)
+
+### Custom Palette Usage
+
+This example specifically demonstrates how to use the **Custom Palette** feature (`setCustomPalette`). Instead of relying on the built-in engine palettes, it defines a unique "Neon/Cyberpunk" color scheme (Neon Pink, Cyan, Yellow on Black) directly in the scene code to give the game a distinct visual style.
+
+### Game Logic
+
+- **State Management**: Tracks board state, player turns, and win/draw conditions.
+- **Basic AI**: The computer opponent uses a heuristic approach to block player moves or find winning spots, with a configurable error chance to make it beatable.
 
 ---
 
