@@ -28,8 +28,6 @@ const int BTN_RIGHT = 14;
 const int BTN_A = 13;
 const int BTN_B = 12;
 
-pr32::drivers::esp32::TFT_eSPI_Drawer drawer;
-
 // Select Audio Backend
 // Option A: I2S (High quality, external DAC like MAX98357A)
 // pr32::drivers::esp32::ESP32_I2S_AudioBackend audioBackend(I2S_BCLK, I2S_LRCK, I2S_DOUT, 22050);
@@ -37,7 +35,7 @@ pr32::drivers::esp32::TFT_eSPI_Drawer drawer;
 // Option B: Internal DAC (Retro quality, internal DAC + PAM8302A)
 pr32::drivers::esp32::ESP32_DAC_AudioBackend audioBackend(DAC_PIN, 11025); // Lower sample rate for simple dacWrite stability
 
-pr32::graphics::DisplayConfig config(&drawer, DISPLAY_ROTATION, DISPLAY_HEIGHT, DISPLAY_WIDTH);
+pr32::graphics::DisplayConfig config(pr32::graphics::DisplayType::ST7789, DISPLAY_ROTATION, DISPLAY_HEIGHT, DISPLAY_WIDTH);
 
 pr32::input::InputConfig inputConfig(6, BTN_UP, BTN_DOWN, BTN_LEFT, BTN_RIGHT, BTN_A, BTN_B); // 6 buttons: Up, Down, Left, Right, A, B
 
