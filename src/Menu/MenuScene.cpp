@@ -9,6 +9,7 @@
 #include "examples/Snake/SnakeScene.h"
 #include "examples/SpaceInvaders/SpaceInvadersScene.h"
 #include "examples/CameraDemo/CameraDemoScene.h"
+#include "examples/DualPaletteTest/DualPaletteTestScene.h"
 #include "examples/SpritesDemo/SpritesDemoScene.h"
 
 namespace pr32 = pixelroot32;
@@ -22,6 +23,7 @@ tictactoe::TicTacToeScene tttScene;
 snake::SnakeScene snakeScene;
 spaceinvaders::SpaceInvadersScene spaceInvadersScene;
 camerademo::CameraDemoScene cameraDemoScene;
+dualpalettetest::DualPaletteTestScene dualPaletteTestScene;
 #ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
 spritesdemo::SpritesDemoScene spritesDemoScene;
 #endif
@@ -146,8 +148,14 @@ void MenuScene::init() {
     cameraDemoButton->setRenderLayer(2);
     addEntity(cameraDemoButton);
 
+    dualPaletteTestButton = new pr32::graphics::ui::UIButton("DUAL PALETTE TEST", menu::BTN_SELECT, btnX, startY + 5*stepY, btnW, btnH, []() {
+        engine.setScene(&dualPaletteTestScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+    dualPaletteTestButton->setRenderLayer(2);
+    addEntity(dualPaletteTestButton);
+
 #ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
-    spritesDemoButton = new pr32::graphics::ui::UIButton("SPRITES DEMO", menu::BTN_SELECT, btnX, startY + 5*stepY, btnW, btnH, []() {
+    spritesDemoButton = new pr32::graphics::ui::UIButton("SPRITES DEMO", menu::BTN_SELECT, btnX, startY + 6*stepY, btnW, btnH, []() {
         engine.setScene(&spritesDemoScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
     spritesDemoButton->setRenderLayer(2);
@@ -229,6 +237,7 @@ void MenuScene::update(unsigned long deltaTime) {
     snakeButton->handleInput(input);
     spaceInvadersButton->handleInput(input);
     cameraDemoButton->handleInput(input);
+    dualPaletteTestButton->handleInput(input);
 #ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
     spritesDemoButton->handleInput(input);
 #endif
@@ -253,9 +262,12 @@ void MenuScene::updateButtonStyles() {
     cameraDemoButton->setSelected(selectedIndex == 4);
     cameraDemoButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 4));
 
+    dualPaletteTestButton->setSelected(selectedIndex == 5);
+    dualPaletteTestButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 5));
+
 #ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
-    spritesDemoButton->setSelected(selectedIndex == 5);
-    spritesDemoButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 5));
+    spritesDemoButton->setSelected(selectedIndex == 6);
+    spritesDemoButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 6));
 #endif
 }
 

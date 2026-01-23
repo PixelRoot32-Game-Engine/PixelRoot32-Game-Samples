@@ -16,6 +16,7 @@ private:
     pixelroot32::graphics::ui::UIButton* snakeButton;
     pixelroot32::graphics::ui::UIButton* spaceInvadersButton;
     pixelroot32::graphics::ui::UIButton* cameraDemoButton;
+    pixelroot32::graphics::ui::UIButton* dualPaletteTestButton;
 #ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
     pixelroot32::graphics::ui::UIButton* spritesDemoButton;
 #endif
