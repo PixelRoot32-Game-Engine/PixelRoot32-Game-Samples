@@ -10,6 +10,7 @@
 #include "examples/SpaceInvaders/SpaceInvadersScene.h"
 #include "examples/CameraDemo/CameraDemoScene.h"
 #include "examples/DualPaletteTest/DualPaletteTestScene.h"
+#include "examples/FontTest/FontTestScene.h"
 #include "examples/SpritesDemo/SpritesDemoScene.h"
 
 namespace pr32 = pixelroot32;
@@ -24,6 +25,7 @@ snake::SnakeScene snakeScene;
 spaceinvaders::SpaceInvadersScene spaceInvadersScene;
 camerademo::CameraDemoScene cameraDemoScene;
 dualpalettetest::DualPaletteTestScene dualPaletteTestScene;
+fonttest::FontTestScene fontTestScene;
 #ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
 spritesdemo::SpritesDemoScene spritesDemoScene;
 #endif
@@ -154,8 +156,14 @@ void MenuScene::init() {
     dualPaletteTestButton->setRenderLayer(2);
     addEntity(dualPaletteTestButton);
 
+    fontTestButton = new pr32::graphics::ui::UIButton("FONT TEST", menu::BTN_SELECT, btnX, startY + 6*stepY, btnW, btnH, []() {
+        engine.setScene(&fontTestScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+    fontTestButton->setRenderLayer(2);
+    addEntity(fontTestButton);
+
 #ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
-    spritesDemoButton = new pr32::graphics::ui::UIButton("SPRITES DEMO", menu::BTN_SELECT, btnX, startY + 6*stepY, btnW, btnH, []() {
+    spritesDemoButton = new pr32::graphics::ui::UIButton("SPRITES DEMO", menu::BTN_SELECT, btnX, startY + 7*stepY, btnW, btnH, []() {
         engine.setScene(&spritesDemoScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
     spritesDemoButton->setRenderLayer(2);
@@ -238,6 +246,7 @@ void MenuScene::update(unsigned long deltaTime) {
     spaceInvadersButton->handleInput(input);
     cameraDemoButton->handleInput(input);
     dualPaletteTestButton->handleInput(input);
+    fontTestButton->handleInput(input);
 #ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
     spritesDemoButton->handleInput(input);
 #endif
@@ -265,9 +274,12 @@ void MenuScene::updateButtonStyles() {
     dualPaletteTestButton->setSelected(selectedIndex == 5);
     dualPaletteTestButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 5));
 
+    fontTestButton->setSelected(selectedIndex == 6);
+    fontTestButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 6));
+
 #ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
-    spritesDemoButton->setSelected(selectedIndex == 6);
-    spritesDemoButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 6));
+    spritesDemoButton->setSelected(selectedIndex == 7);
+    spritesDemoButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 7));
 #endif
 }
 
