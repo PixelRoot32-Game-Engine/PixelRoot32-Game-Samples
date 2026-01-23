@@ -2,6 +2,7 @@
 #include "core/Scene.h"
 #include "graphics/ui/UILabel.h"
 #include "graphics/ui/UIButton.h"
+#include "graphics/ui/UIVerticalLayout.h"
 
 class MenuScene : public pixelroot32::core::Scene {
 public:
@@ -11,6 +12,7 @@ public:
 
 private:
     pixelroot32::graphics::ui::UILabel* titleLabel;
+    pixelroot32::graphics::ui::UIVerticalLayout* buttonLayout;
     pixelroot32::graphics::ui::UIButton* pongButton;
     pixelroot32::graphics::ui::UIButton* tttButton;
     pixelroot32::graphics::ui::UIButton* snakeButton;
@@ -21,13 +23,6 @@ private:
 #ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
     pixelroot32::graphics::ui::UIButton* spritesDemoButton;
 #endif
-    
-    int selectedIndex = 0;
-    void updateButtonStyles();
-    
-    // Workaround for InputManager debounce/stateChanged bug
-    bool wasUpPressed = false;
-    bool wasDownPressed = false;
 
     pixelroot32::graphics::ui::UILabel* lblNavigate;
     pixelroot32::graphics::ui::UILabel* lblSelect;

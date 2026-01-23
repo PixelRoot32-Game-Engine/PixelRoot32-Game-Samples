@@ -112,62 +112,63 @@ void MenuScene::init() {
     titleLabel->setRenderLayer(2);
     addEntity(titleLabel);
 
+    // Create vertical layout for buttons
     float btnW = menu::BTN_WIDTH;
     float btnH = menu::BTN_HEIGHT;
     float btnX = cx - (btnW / 2.0f);
     float startY = menu::BTN_START_Y;
-    float gap = menu::BTN_GAP;
+    float layoutHeight = screenHeight - startY - menu::NAV_INSTR_Y_OFFSET - 10; // Space for instructions
+    
+    buttonLayout = new pr32::graphics::ui::UIVerticalLayout(btnX, startY, btnW, layoutHeight);
+    buttonLayout->setPadding(0);
+    buttonLayout->setSpacing(menu::BTN_GAP);
+    buttonLayout->setScrollEnabled(true);
+    buttonLayout->setNavigationButtons(menu::BTN_NAV_UP, menu::BTN_NAV_DOWN);
+    buttonLayout->setButtonStyle(Color::White, Color::Cyan, Color::White, Color::Black);
+    buttonLayout->setRenderLayer(2);
+    addEntity(buttonLayout);
 
-    pongButton = new pr32::graphics::ui::UIButton("PONG", menu::BTN_SELECT, btnX, startY, btnW, btnH, []() {
+    // Create buttons and add them only to the layout (layout handles rendering and positioning)
+    pongButton = new pr32::graphics::ui::UIButton("PONG", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
         engine.setScene(&pongScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
-    pongButton->setRenderLayer(2);
-    addEntity(pongButton);
+    buttonLayout->addElement(pongButton);
 
-    float stepY = btnH + gap;
-
-    tttButton = new pr32::graphics::ui::UIButton("TIC TAC TOE", menu::BTN_SELECT, btnX, startY + stepY, btnW, btnH, []() {
+    tttButton = new pr32::graphics::ui::UIButton("TIC TAC TOE", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
         engine.setScene(&tttScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
-    tttButton->setRenderLayer(2);
-    addEntity(tttButton);
+    buttonLayout->addElement(tttButton);
 
-    snakeButton = new pr32::graphics::ui::UIButton("SNAKE", menu::BTN_SELECT, btnX, startY + 2*stepY, btnW, btnH, []() {
+    snakeButton = new pr32::graphics::ui::UIButton("SNAKE", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
         engine.setScene(&snakeScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
-    snakeButton->setRenderLayer(2);
-    addEntity(snakeButton);
+    buttonLayout->addElement(snakeButton);
 
-    spaceInvadersButton = new pr32::graphics::ui::UIButton("SPACE INVADERS", menu::BTN_SELECT, btnX, startY + 3*stepY, btnW, btnH, []() {
+    spaceInvadersButton = new pr32::graphics::ui::UIButton("SPACE INVADERS", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
         engine.setScene(&spaceInvadersScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
-    spaceInvadersButton->setRenderLayer(2);
-    addEntity(spaceInvadersButton);
+    buttonLayout->addElement(spaceInvadersButton);
 
-    cameraDemoButton = new pr32::graphics::ui::UIButton("CAMERA DEMO", menu::BTN_SELECT, btnX, startY + 4*stepY, btnW, btnH, []() {
+    cameraDemoButton = new pr32::graphics::ui::UIButton("CAMERA DEMO", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
         engine.setScene(&cameraDemoScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
-    cameraDemoButton->setRenderLayer(2);
-    addEntity(cameraDemoButton);
+    buttonLayout->addElement(cameraDemoButton);
 
-    dualPaletteTestButton = new pr32::graphics::ui::UIButton("DUAL PALETTE TEST", menu::BTN_SELECT, btnX, startY + 5*stepY, btnW, btnH, []() {
+    dualPaletteTestButton = new pr32::graphics::ui::UIButton("DUAL PALETTE TEST", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
         engine.setScene(&dualPaletteTestScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
-    dualPaletteTestButton->setRenderLayer(2);
-    addEntity(dualPaletteTestButton);
+    buttonLayout->addElement(dualPaletteTestButton);
 
-    fontTestButton = new pr32::graphics::ui::UIButton("FONT TEST", menu::BTN_SELECT, btnX, startY + 6*stepY, btnW, btnH, []() {
+    fontTestButton = new pr32::graphics::ui::UIButton("FONT TEST", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
         engine.setScene(&fontTestScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
-    fontTestButton->setRenderLayer(2);
-    addEntity(fontTestButton);
+    buttonLayout->addElement(fontTestButton);
 
 #ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
-    spritesDemoButton = new pr32::graphics::ui::UIButton("SPRITES DEMO", menu::BTN_SELECT, btnX, startY + 7*stepY, btnW, btnH, []() {
+    spritesDemoButton = new pr32::graphics::ui::UIButton("SPRITES DEMO", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
         engine.setScene(&spritesDemoScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
-    spritesDemoButton->setRenderLayer(2);
-    addEntity(spritesDemoButton);
+    buttonLayout->addElement(spritesDemoButton);
 #endif
 
     lblNavigate = new pr32::graphics::ui::UILabel("UP/DOWN: Navigate", 0, screenHeight - menu::NAV_INSTR_Y_OFFSET, Color::Cyan, menu::INSTRUCTION_FONT_SIZE);
@@ -180,10 +181,10 @@ void MenuScene::init() {
     lblSelect->setRenderLayer(2);
     addEntity(lblSelect);
 
-    selectedIndex = -1;
-    wasUpPressed = false;
-    wasDownPressed = false;
-    updateButtonStyles();
+    // Initialize layout selection to first button
+    if (buttonLayout->getElementCount() > 0) {
+        buttonLayout->setSelectedIndex(0);
+    }
 }
 
 void MenuScene::update(unsigned long deltaTime) {
@@ -192,9 +193,27 @@ void MenuScene::update(unsigned long deltaTime) {
     // Input Handling
     auto& input = engine.getInputManager();
 
-    // Sound test
-    if (input.isButtonPressed(menu::BTN_SELECT)) { // Space / A
-        // Play simple blip
+    // Handle layout navigation (UP/DOWN handled by layout)
+    // Track previous selection for sound feedback
+    static int lastSelectedIndex = -1;
+    
+    buttonLayout->handleInput(input);
+    
+    // Check if selection changed (for sound feedback)
+    int newSelectedIndex = buttonLayout->getSelectedIndex();
+    if (newSelectedIndex != lastSelectedIndex && newSelectedIndex >= 0) {
+        // Play navigation sound
+        pr32::audio::AudioEvent ev;
+        ev.type = pr32::audio::WaveType::TRIANGLE;
+        ev.frequency = menu::SOUND_NAV_FREQ;
+        ev.duration = menu::SOUND_NAV_DUR;
+        ev.volume = menu::SOUND_VOL_NAV;
+        engine.getAudioEngine().playEvent(ev);
+        lastSelectedIndex = newSelectedIndex;
+    }
+
+    // Sound test for SELECT button
+    if (input.isButtonPressed(menu::BTN_SELECT)) {
         pr32::audio::AudioEvent ev;
         ev.type = pr32::audio::WaveType::PULSE;
         ev.frequency = menu::SOUND_BLIP_FREQ;
@@ -203,84 +222,6 @@ void MenuScene::update(unsigned long deltaTime) {
         ev.duty = 0.5f;
         engine.getAudioEngine().playEvent(ev);
     }
-
-    // Workaround for multiple triggers: Use isButtonDown + local state to detect rising edge
-    bool isUp = input.isButtonDown(menu::BTN_NAV_UP);
-    if (isUp && !wasUpPressed) { // UP Rising Edge
-        selectedIndex--;
-        if (selectedIndex < 0) selectedIndex = menu::GAME_COUNT - 1;
-        updateButtonStyles();
-        
-        // Navigation sound
-        pr32::audio::AudioEvent ev;
-        ev.type = pr32::audio::WaveType::TRIANGLE;
-        ev.frequency = menu::SOUND_NAV_FREQ;
-        ev.duration = menu::SOUND_NAV_DUR;
-        ev.volume = menu::SOUND_VOL_NAV;
-        engine.getAudioEngine().playEvent(ev);
-    }
-    wasUpPressed = isUp;
-
-    bool isDown = input.isButtonDown(menu::BTN_NAV_DOWN);
-    if (isDown && !wasDownPressed) { // DOWN Rising Edge
-        selectedIndex++;
-        if (selectedIndex >= menu::GAME_COUNT) selectedIndex = 0;
-        updateButtonStyles();
-
-        // Navigation sound
-        pr32::audio::AudioEvent ev;
-        ev.type = pr32::audio::WaveType::TRIANGLE;
-        ev.frequency = menu::SOUND_NAV_FREQ;
-        ev.duration = menu::SOUND_NAV_DUR;
-        ev.volume = menu::SOUND_VOL_NAV;
-        engine.getAudioEngine().playEvent(ev);
-    }
-    wasDownPressed = isDown;
-
-    // Trigger button logic (checks for button 4 press if selected)
-    // UIButton::handleInput uses isButtonPressed internally which might also have issues,
-    // but let's test navigation first.
-    pongButton->handleInput(input);
-    tttButton->handleInput(input);
-    snakeButton->handleInput(input);
-    spaceInvadersButton->handleInput(input);
-    cameraDemoButton->handleInput(input);
-    dualPaletteTestButton->handleInput(input);
-    fontTestButton->handleInput(input);
-#ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
-    spritesDemoButton->handleInput(input);
-#endif
-}
-
-void MenuScene::updateButtonStyles() {
-    // Style: Selected = Cyan BG + White Text
-    //        Unselected = No BG + White Text
-    
-    pongButton->setSelected(selectedIndex == 0);
-    pongButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 0)); 
-
-    tttButton->setSelected(selectedIndex == 1);
-    tttButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 1));
-
-    snakeButton->setSelected(selectedIndex == 2);
-    snakeButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 2));
-
-    spaceInvadersButton->setSelected(selectedIndex == 3);
-    spaceInvadersButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 3));
-
-    cameraDemoButton->setSelected(selectedIndex == 4);
-    cameraDemoButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 4));
-
-    dualPaletteTestButton->setSelected(selectedIndex == 5);
-    dualPaletteTestButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 5));
-
-    fontTestButton->setSelected(selectedIndex == 6);
-    fontTestButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 6));
-
-#ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
-    spritesDemoButton->setSelected(selectedIndex == 7);
-    spritesDemoButton->setStyle(Color::White, Color::Cyan, (selectedIndex == 7));
-#endif
 }
 
 void MenuScene::draw(pixelroot32::graphics::Renderer& renderer) {
