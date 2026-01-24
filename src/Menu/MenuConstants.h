@@ -32,8 +32,8 @@ namespace menu {
     constexpr float SOUND_VOL_NAV = 0.3f;
 
 #ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
-    constexpr int GAME_COUNT = 6;
+    constexpr int GAME_COUNT = 8;
 #else
-    constexpr int GAME_COUNT = 5;
+    constexpr int GAME_COUNT = 7;
 #endif
 }
