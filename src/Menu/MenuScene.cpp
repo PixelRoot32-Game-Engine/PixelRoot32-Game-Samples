@@ -12,6 +12,10 @@
 #include "examples/DualPaletteTest/DualPaletteTestScene.h"
 #include "examples/FontTest/FontTestScene.h"
 #include "examples/SpritesDemo/SpritesDemoScene.h"
+#include "examples/VerticalLayoutDemo/VerticalLayoutDemoScene.h"
+#include "examples/HorizontalLayoutDemo/HorizontalLayoutDemoScene.h"
+#include "examples/GridLayoutDemo/GridLayoutDemoScene.h"
+#include "examples/AnchorLayoutDemo/AnchorLayoutDemoScene.h"
 
 namespace pr32 = pixelroot32;
 
@@ -26,98 +30,33 @@ spaceinvaders::SpaceInvadersScene spaceInvadersScene;
 camerademo::CameraDemoScene cameraDemoScene;
 dualpalettetest::DualPaletteTestScene dualPaletteTestScene;
 fonttest::FontTestScene fontTestScene;
-#ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
-spritesdemo::SpritesDemoScene spritesDemoScene;
-#endif
+verticallayoutdemo::VerticalLayoutDemoScene verticalLayoutDemoScene;
+horizontallayoutdemo::HorizontalLayoutDemoScene horizontalLayoutDemoScene;
+gridlayoutdemo::GridLayoutDemoScene gridLayoutDemoScene;
+anchorlayoutdemo::AnchorLayoutDemoScene anchorLayoutDemoScene;
 
 using Color = pr32::graphics::Color;
 
-#ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
-static const uint8_t MENU_LOGO_2BPP_DATA[] = {
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x01, 0x15, 0x15, 0x15, 0x15, 0x40,
-    0x05, 0x11, 0x11, 0x10, 0x10, 0x50,
-    0x11, 0x15, 0x15, 0x14, 0x04, 0x44,
-    0x05, 0x01, 0x11, 0x10, 0x01, 0x50,
-    0x01, 0x01, 0x41, 0x15, 0x15, 0x40,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
-
-static const Color MENU_LOGO_2BPP_PALETTE[] = {
-    Color::Transparent,
-    Color::Cyan,
-    Color::Blue
-};
-
-static const pr32::graphics::Sprite2bpp MENU_LOGO_2BPP = {
-    MENU_LOGO_2BPP_DATA,
-    MENU_LOGO_2BPP_PALETTE,
-    24,
-    8,
-    3
-};
-#endif
-
-class MenuBackground : public pr32::core::Entity {
-public:
-    MenuBackground()
-        : pr32::core::Entity(0.0f, 0.0f, DISPLAY_WIDTH, DISPLAY_HEIGHT, pr32::core::EntityType::GENERIC) {
-        setRenderLayer(0);
-    }
-
-    void update(unsigned long) override {
-    }
-
-    void draw(pr32::graphics::Renderer& renderer) override {
-        renderer.drawFilledRectangle(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, Color::Black);
-    }
-};
-
-#ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
-class MenuLogo : public pr32::core::Entity {
-public:
-    MenuLogo()
-        : pr32::core::Entity(0.0f, 0.0f, 24.0f, 8.0f, pr32::core::EntityType::GENERIC) {
-        setRenderLayer(1);
-    }
-
-    void update(unsigned long) override {
-    }
-
-    void draw(pr32::graphics::Renderer& renderer) override {
-        int screenWidth = renderer.getWidth();
-        int x = (screenWidth - MENU_LOGO_2BPP.width) / 2;
-        int y = menu::TITLE_Y - 10;
-        renderer.drawSprite(MENU_LOGO_2BPP, x, y, false);
-    }
-};
-#endif
-
 void MenuScene::init() {
+    // Clear any existing entities to prevent duplicates if init() is called multiple times
+    clearEntities();
+
     pr32::graphics::setPalette(pr32::graphics::PaletteType::PR32);
     int screenWidth = engine.getRenderer().getWidth();
     int screenHeight = engine.getRenderer().getHeight();
 
-    float cx = screenWidth / 2;
-
-    addEntity(new MenuBackground());
-
-#ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
-    addEntity(new MenuLogo());
-#endif
-
-    titleLabel = new pr32::graphics::ui::UILabel("Game List", 0, menu::TITLE_Y, Color::White, 1);
+    // Create title label
+    titleLabel = new pr32::graphics::ui::UILabel("Examples", 0, menu::TITLE_Y, Color::White, menu::TITLE_FONT_SIZE);
     titleLabel->centerX(screenWidth);
     titleLabel->setRenderLayer(2);
     addEntity(titleLabel);
 
     // Create vertical layout for buttons
     float btnW = menu::BTN_WIDTH;
-    float btnH = menu::BTN_HEIGHT;
+    float cx = screenWidth / 2.0f;
     float btnX = cx - (btnW / 2.0f);
     float startY = menu::BTN_START_Y;
-    float layoutHeight = screenHeight - startY - menu::NAV_INSTR_Y_OFFSET - 10; // Space for instructions
+    float layoutHeight = screenHeight - startY - menu::NAV_INSTR_Y_OFFSET - 10;
     
     buttonLayout = new pr32::graphics::ui::UIVerticalLayout(btnX, startY, btnW, layoutHeight);
     buttonLayout->setPadding(0);
@@ -128,49 +67,12 @@ void MenuScene::init() {
     buttonLayout->setRenderLayer(2);
     addEntity(buttonLayout);
 
-    // Create buttons and add them only to the layout (layout handles rendering and positioning)
-    pongButton = new pr32::graphics::ui::UIButton("PONG", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
-        engine.setScene(&pongScene);
-    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
-    buttonLayout->addElement(pongButton);
+    // Create all buttons (will be shown/hidden based on menu state)
+    setupMainMenu();
+    setupGamesMenu();
+    setupLayoutsMenu();
 
-    tttButton = new pr32::graphics::ui::UIButton("TIC TAC TOE", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
-        engine.setScene(&tttScene);
-    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
-    buttonLayout->addElement(tttButton);
-
-    snakeButton = new pr32::graphics::ui::UIButton("SNAKE", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
-        engine.setScene(&snakeScene);
-    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
-    buttonLayout->addElement(snakeButton);
-
-    spaceInvadersButton = new pr32::graphics::ui::UIButton("SPACE INVADERS", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
-        engine.setScene(&spaceInvadersScene);
-    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
-    buttonLayout->addElement(spaceInvadersButton);
-
-    cameraDemoButton = new pr32::graphics::ui::UIButton("CAMERA DEMO", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
-        engine.setScene(&cameraDemoScene);
-    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
-    buttonLayout->addElement(cameraDemoButton);
-
-    dualPaletteTestButton = new pr32::graphics::ui::UIButton("DUAL PALETTE TEST", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
-        engine.setScene(&dualPaletteTestScene);
-    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
-    buttonLayout->addElement(dualPaletteTestButton);
-
-    fontTestButton = new pr32::graphics::ui::UIButton("FONT TEST", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
-        engine.setScene(&fontTestScene);
-    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
-    buttonLayout->addElement(fontTestButton);
-
-#ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
-    spritesDemoButton = new pr32::graphics::ui::UIButton("SPRITES DEMO", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
-        engine.setScene(&spritesDemoScene);
-    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
-    buttonLayout->addElement(spritesDemoButton);
-#endif
-
+    // Navigation labels
     lblNavigate = new pr32::graphics::ui::UILabel("UP/DOWN: Navigate", 0, screenHeight - menu::NAV_INSTR_Y_OFFSET, Color::Cyan, menu::INSTRUCTION_FONT_SIZE);
     lblNavigate->centerX(screenWidth);
     lblNavigate->setRenderLayer(2);
@@ -181,10 +83,14 @@ void MenuScene::init() {
     lblSelect->setRenderLayer(2);
     addEntity(lblSelect);
 
-    // Initialize layout selection to first button
-    if (buttonLayout->getElementCount() > 0) {
-        buttonLayout->setSelectedIndex(0);
-    }
+    lblBack = new pr32::graphics::ui::UILabel("B: Back", 0, screenHeight - 15, Color::Cyan, menu::INSTRUCTION_FONT_SIZE);
+    lblBack->centerX(screenWidth);
+    lblBack->setRenderLayer(2);
+    addEntity(lblBack);
+
+    // Show main menu initially
+    currentState = MenuState::MAIN;
+    showMenu(MenuState::MAIN);
 }
 
 void MenuScene::update(unsigned long deltaTime) {
@@ -192,6 +98,21 @@ void MenuScene::update(unsigned long deltaTime) {
     
     // Input Handling
     auto& input = engine.getInputManager();
+
+    // Handle back button (B button, typically button 5)
+    static bool wasBackPressed = false;
+    bool isBackPressed = input.isButtonPressed(5); // B button
+    if (isBackPressed && !wasBackPressed) {
+        goBack();
+        // Play back sound
+        pr32::audio::AudioEvent ev;
+        ev.type = pr32::audio::WaveType::TRIANGLE;
+        ev.frequency = menu::SOUND_NAV_FREQ;
+        ev.duration = menu::SOUND_NAV_DUR;
+        ev.volume = menu::SOUND_VOL_NAV;
+        engine.getAudioEngine().playEvent(ev);
+    }
+    wasBackPressed = isBackPressed;
 
     // Handle layout navigation (UP/DOWN handled by layout)
     // Track previous selection for sound feedback
@@ -226,4 +147,125 @@ void MenuScene::update(unsigned long deltaTime) {
 
 void MenuScene::draw(pixelroot32::graphics::Renderer& renderer) {
     Scene::draw(renderer);
+}
+
+void MenuScene::setupMainMenu() {
+    float btnW = menu::BTN_WIDTH;
+    float btnH = menu::BTN_HEIGHT;
+    
+    gamesButton = new pr32::graphics::ui::UIButton("GAMES", menu::BTN_SELECT, 0, 0, btnW, btnH, [this]() {
+        showMenu(MenuState::GAMES);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+    
+    cameraDemoButton = new pr32::graphics::ui::UIButton("CAMERA DEMO", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
+        engine.setScene(&cameraDemoScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+    
+    fontTestButton = new pr32::graphics::ui::UIButton("FONT TEST", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
+        engine.setScene(&fontTestScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+    
+    dualPaletteTestButton = new pr32::graphics::ui::UIButton("DUAL PALETTE TEST", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
+        engine.setScene(&dualPaletteTestScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+    
+    layoutsButton = new pr32::graphics::ui::UIButton("LAYOUTS", menu::BTN_SELECT, 0, 0, btnW, btnH, [this]() {
+        showMenu(MenuState::LAYOUTS);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+}
+
+void MenuScene::setupGamesMenu() {
+    float btnW = menu::BTN_WIDTH;
+    float btnH = menu::BTN_HEIGHT;
+    
+    pongButton = new pr32::graphics::ui::UIButton("PONG", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
+        engine.setScene(&pongScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+    
+    snakeButton = new pr32::graphics::ui::UIButton("SNAKE", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
+        engine.setScene(&snakeScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+    
+    spaceInvadersButton = new pr32::graphics::ui::UIButton("SPACE INVADERS", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
+        engine.setScene(&spaceInvadersScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+    
+    tttButton = new pr32::graphics::ui::UIButton("TIC TAC TOE", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
+        engine.setScene(&tttScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+}
+
+void MenuScene::setupLayoutsMenu() {
+    float btnW = menu::BTN_WIDTH;
+    float btnH = menu::BTN_HEIGHT;
+    
+    verticalLayoutButton = new pr32::graphics::ui::UIButton("VERTICAL LAYOUT", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
+        engine.setScene(&verticalLayoutDemoScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+    
+    horizontalLayoutButton = new pr32::graphics::ui::UIButton("HORIZONTAL LAYOUT", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
+        engine.setScene(&horizontalLayoutDemoScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+    
+    gridLayoutButton = new pr32::graphics::ui::UIButton("GRID LAYOUT", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
+        engine.setScene(&gridLayoutDemoScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+    
+    anchorLayoutButton = new pr32::graphics::ui::UIButton("ANCHOR LAYOUT", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
+        engine.setScene(&anchorLayoutDemoScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+}
+
+void MenuScene::showMenu(MenuState state) {
+    currentState = state;
+    
+    // Clear all elements from layout
+    buttonLayout->clearElements();
+    
+    // Update title
+    int screenWidth = engine.getRenderer().getWidth();
+    
+    switch (state) {
+        case MenuState::MAIN:
+            titleLabel->setText("Main");
+            buttonLayout->addElement(gamesButton);
+            buttonLayout->addElement(cameraDemoButton);
+#ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
+            buttonLayout->addElement(spriteDemoButton);
+#endif
+            buttonLayout->addElement(fontTestButton);
+            buttonLayout->addElement(dualPaletteTestButton);
+            buttonLayout->addElement(layoutsButton);
+            break;
+            
+        case MenuState::GAMES:
+            titleLabel->setText("Games");
+            buttonLayout->addElement(pongButton);
+            buttonLayout->addElement(snakeButton);
+            buttonLayout->addElement(spaceInvadersButton);
+            buttonLayout->addElement(tttButton);
+            break;
+            
+        case MenuState::LAYOUTS:
+            titleLabel->setText("Layouts");
+            buttonLayout->addElement(verticalLayoutButton);
+            buttonLayout->addElement(horizontalLayoutButton);
+            buttonLayout->addElement(gridLayoutButton);
+            buttonLayout->addElement(anchorLayoutButton);
+            break;
+    }
+    
+    titleLabel->centerX(screenWidth);
+}
+
+void MenuScene::goBack() {
+    switch (currentState) {
+        case MenuState::MAIN:
+            // Already at main menu, nothing to do
+            break;
+        case MenuState::GAMES:
+        case MenuState::LAYOUTS:
+            showMenu(MenuState::MAIN);
+            break;
+    }
 }

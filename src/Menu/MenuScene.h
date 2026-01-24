@@ -4,6 +4,12 @@
 #include "graphics/ui/UIButton.h"
 #include "graphics/ui/UIVerticalLayout.h"
 
+enum class MenuState {
+    MAIN,
+    GAMES,
+    LAYOUTS
+};
+
 class MenuScene : public pixelroot32::core::Scene {
 public:
     void init() override;
@@ -11,19 +17,41 @@ public:
     void draw(pixelroot32::graphics::Renderer& renderer) override;
 
 private:
+    MenuState currentState = MenuState::MAIN;
+    
+    // UI Elements
     pixelroot32::graphics::ui::UILabel* titleLabel;
     pixelroot32::graphics::ui::UIVerticalLayout* buttonLayout;
+
+    // Examples menu buttons
+    pixelroot32::graphics::ui::UIButton* gamesButton;
+    pixelroot32::graphics::ui::UIButton* cameraDemoButton;
+    pixelroot32::graphics::ui::UIButton* spriteDemoButton;
+    pixelroot32::graphics::ui::UIButton* fontTestButton;
+    pixelroot32::graphics::ui::UIButton* dualPaletteTestButton;
+    pixelroot32::graphics::ui::UIButton* layoutsButton;
+    
+    // Games menu buttons
     pixelroot32::graphics::ui::UIButton* pongButton;
-    pixelroot32::graphics::ui::UIButton* tttButton;
     pixelroot32::graphics::ui::UIButton* snakeButton;
     pixelroot32::graphics::ui::UIButton* spaceInvadersButton;
-    pixelroot32::graphics::ui::UIButton* cameraDemoButton;
-    pixelroot32::graphics::ui::UIButton* dualPaletteTestButton;
-    pixelroot32::graphics::ui::UIButton* fontTestButton;
-#ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
-    pixelroot32::graphics::ui::UIButton* spritesDemoButton;
-#endif
-
+    pixelroot32::graphics::ui::UIButton* tttButton;
+    
+    // Layouts menu buttons
+    pixelroot32::graphics::ui::UIButton* verticalLayoutButton;
+    pixelroot32::graphics::ui::UIButton* horizontalLayoutButton;
+    pixelroot32::graphics::ui::UIButton* gridLayoutButton;
+    pixelroot32::graphics::ui::UIButton* anchorLayoutButton;
+    
+    // Navigation labels
     pixelroot32::graphics::ui::UILabel* lblNavigate;
     pixelroot32::graphics::ui::UILabel* lblSelect;
+    pixelroot32::graphics::ui::UILabel* lblBack;
+    
+    // Helper methods
+    void setupMainMenu();
+    void setupGamesMenu();
+    void setupLayoutsMenu();
+    void showMenu(MenuState state);
+    void goBack();
 };
