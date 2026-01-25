@@ -4,18 +4,22 @@
 #include "Config.h"
 #include "graphics/Renderer.h"
 
-#include "examples/Pong/PongScene.h"
-#include "examples/TicTacToe/TicTacToeScene.h"
-#include "examples/Snake/SnakeScene.h"
-#include "examples/SpaceInvaders/SpaceInvadersScene.h"
+#include "examples/Games/Pong/PongScene.h"
+#include "examples/Games/BrickBreaker/BrickBreakerScene.h"
+#include "examples/Games/TicTacToe/TicTacToeScene.h"
+#include "examples/Games/Snake/SnakeScene.h"
+#include "examples/Games/SpaceInvaders/SpaceInvadersScene.h"
 #include "examples/CameraDemo/CameraDemoScene.h"
 #include "examples/DualPaletteTest/DualPaletteTestScene.h"
 #include "examples/FontTest/FontTestScene.h"
 #include "examples/SpritesDemo/SpritesDemoScene.h"
-#include "examples/VerticalLayoutDemo/VerticalLayoutDemoScene.h"
-#include "examples/HorizontalLayoutDemo/HorizontalLayoutDemoScene.h"
-#include "examples/GridLayoutDemo/GridLayoutDemoScene.h"
-#include "examples/AnchorLayoutDemo/AnchorLayoutDemoScene.h"
+#include "examples/UIElementDemo/CheckBoxDemo/CheckBoxScene.h"
+#include "examples/UIElementDemo/ButtonDemo/ButtonScene.h"
+#include "examples/UIElementDemo/LabelDemo/LabelScene.h"
+#include "examples/UIElementDemo/Layouts/VerticalLayoutDemo/VerticalLayoutDemoScene.h"
+#include "examples/UIElementDemo/Layouts/HorizontalLayoutDemo/HorizontalLayoutDemoScene.h"
+#include "examples/UIElementDemo/Layouts/GridLayoutDemo/GridLayoutDemoScene.h"
+#include "examples/UIElementDemo/Layouts/AnchorLayoutDemo/AnchorLayoutDemoScene.h"
 
 namespace pr32 = pixelroot32;
 
@@ -23,13 +27,16 @@ extern pr32::core::Engine engine;
 
 // Define instances here
 pong::PongScene pongScene;
-// brickbreaker::BrickBreakerScene brickScene;
+brickbreaker::BrickBreakerScene brickScene;
 tictactoe::TicTacToeScene tttScene;
 snake::SnakeScene snakeScene;
 spaceinvaders::SpaceInvadersScene spaceInvadersScene;
 camerademo::CameraDemoScene cameraDemoScene;
 dualpalettetest::DualPaletteTestScene dualPaletteTestScene;
 fonttest::FontTestScene fontTestScene;
+checkboxdemo::CheckBoxScene checkBoxScene;
+buttondemo::ButtonScene buttonScene;
+labeldemo::LabelScene labelScene;
 verticallayoutdemo::VerticalLayoutDemoScene verticalLayoutDemoScene;
 horizontallayoutdemo::HorizontalLayoutDemoScene horizontalLayoutDemoScene;
 gridlayoutdemo::GridLayoutDemoScene gridLayoutDemoScene;
@@ -70,6 +77,7 @@ void MenuScene::init() {
     // Create all buttons (will be shown/hidden based on menu state)
     setupMainMenu();
     setupGamesMenu();
+    setupUIElementsMenu();
     setupLayoutsMenu();
 
     // Navigation labels
@@ -169,8 +177,8 @@ void MenuScene::setupMainMenu() {
         engine.setScene(&dualPaletteTestScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
     
-    layoutsButton = new pr32::graphics::ui::UIButton("LAYOUTS", menu::BTN_SELECT, 0, 0, btnW, btnH, [this]() {
-        showMenu(MenuState::LAYOUTS);
+    uiElementsButton = new pr32::graphics::ui::UIButton("UIELEMENTS", menu::BTN_SELECT, 0, 0, btnW, btnH, [this]() {
+        showMenu(MenuState::UIELEMENTS);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
 }
 
@@ -180,6 +188,10 @@ void MenuScene::setupGamesMenu() {
     
     pongButton = new pr32::graphics::ui::UIButton("PONG", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
         engine.setScene(&pongScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+
+    brickBrackeButton = new pr32::graphics::ui::UIButton("BRICK BRACKE", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
+        engine.setScene(&brickScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
     
     snakeButton = new pr32::graphics::ui::UIButton("SNAKE", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
@@ -192,6 +204,30 @@ void MenuScene::setupGamesMenu() {
     
     tttButton = new pr32::graphics::ui::UIButton("TIC TAC TOE", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
         engine.setScene(&tttScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+}
+
+void MenuScene::setupUIElementsMenu() {
+    float btnW = menu::BTN_WIDTH;
+    float btnH = menu::BTN_HEIGHT;
+
+    buttonsButton = new pr32::graphics::ui::UIButton("BUTTONS", menu::BTN_SELECT, 0, 0, btnW, btnH, [this]() {
+        showMenu(MenuState::BUTTONS);
+        engine.setScene(&buttonScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+    
+    labelsButton = new pr32::graphics::ui::UIButton("LABELS", menu::BTN_SELECT, 0, 0, btnW, btnH, [this]() {
+        showMenu(MenuState::LABELS);
+        engine.setScene(&labelScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+    
+    checkboxesButton = new pr32::graphics::ui::UIButton("CHECKBOXES", menu::BTN_SELECT, 0, 0, btnW, btnH, [this]() {
+        showMenu(MenuState::CHECKBOXES);
+        engine.setScene(&checkBoxScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+    
+    layoutsButton = new pr32::graphics::ui::UIButton("LAYOUTS", menu::BTN_SELECT, 0, 0, btnW, btnH, [this]() {
+        showMenu(MenuState::LAYOUTS);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
 }
 
@@ -235,15 +271,24 @@ void MenuScene::showMenu(MenuState state) {
 #endif
             buttonLayout->addElement(fontTestButton);
             buttonLayout->addElement(dualPaletteTestButton);
-            buttonLayout->addElement(layoutsButton);
+            buttonLayout->addElement(uiElementsButton);
             break;
             
         case MenuState::GAMES:
             titleLabel->setText("Games");
             buttonLayout->addElement(pongButton);
+            buttonLayout->addElement(brickBrackeButton);
             buttonLayout->addElement(snakeButton);
             buttonLayout->addElement(spaceInvadersButton);
             buttonLayout->addElement(tttButton);
+            break;
+        
+        case MenuState::UIELEMENTS: 
+            titleLabel->setText("UIElements");
+            buttonLayout->addElement(buttonsButton);
+            buttonLayout->addElement(labelsButton);
+            buttonLayout->addElement(checkboxesButton);
+            buttonLayout->addElement(layoutsButton);
             break;
             
         case MenuState::LAYOUTS:
@@ -264,8 +309,17 @@ void MenuScene::goBack() {
             // Already at main menu, nothing to do
             break;
         case MenuState::GAMES:
-        case MenuState::LAYOUTS:
             showMenu(MenuState::MAIN);
             break;
+        case MenuState::UIELEMENTS:
+            showMenu(MenuState::MAIN);
+            break;
+        case MenuState::BUTTONS:
+        case MenuState::LABELS:
+        case MenuState::CHECKBOXES:
+        case MenuState::LAYOUTS:
+            showMenu(MenuState::UIELEMENTS);
+            break;
+
     }
 }
