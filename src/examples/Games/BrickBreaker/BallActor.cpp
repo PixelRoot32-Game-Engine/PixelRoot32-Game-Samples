@@ -85,8 +85,10 @@ void BallActor::onCollision(Actor* other) {
 
             BrickBreakerScene* scene = static_cast<BrickBreakerScene*>(engine.getCurrentScene());
             if (scene) {
+                // Particle burst on any brick impact
+                scene->getParticleEmiter()->burst(brick->x + (brick->width / 2), brick->y + (brick->height / 2), 8);
+
                 if (brick->hp <= 0 && previousHp > 0) {
-                    scene->getParticleEmiter()->burst(brick->x + (brick->width / 2), brick->y + (brick->height / 2), 15);
                     scene->addScore(50);
                 } else if (brick->hp < previousHp) {
                     scene->addScore(10);

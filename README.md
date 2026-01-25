@@ -10,9 +10,10 @@ It wires the engine to:
 - a **native desktop build (SDL2)** for fast iteration without hardware.
 
 From a simple menu you can launch several example games shipped with the engine,
-such as **Pong** (PICO8), **Snake** (GB), **Space Invaders** (NES), **Tic‑Tac‑Toe** (Custom Neon), and the
+such as **Pong** (PICO8), **BrickBreaker** (Atari), **Snake** (GB), **Space Invaders** (NES), **Tic‑Tac‑Toe** (Custom Neon), and the
 **Camera Demo** (PR32). For deeper engine walk‑throughs based on real games, see:
 [`Space Invaders`](#example-space-invaders--engine-overview),
+[`BrickBreaker`](#example-brickbreaker--physics-particles-and-advanced-audio),
 [`CameraDemo`](#example-camerademo--camera-parallax-and-platforms),
 and [`Snake`](#example-snake--entity-pooling-and-discrete-game-loop) below.
 
@@ -84,8 +85,10 @@ like the ESP32 screen, with keyboard controls mapped to the virtual buttons.
 
 - Wiring **PixelRoot32** to real hardware and a native SDL2 backend.
 - Using the engine’s **scene system** with a simple menu (`MenuScene`).
-- Hooking up **UI elements** (`UILabel`, `UIButton`) to navigate between games.
-- Driving the **audio engine** with NES‑style sound events.
+- Hooking up **UI elements** (`UILabel`, `UIButton`) to navigate between games and show real-time HUDs.
+- Driving the **audio engine** with NES‑style sound events and background music.
+- Implementing **physics-based movement** and world collisions using `PhysicsActor`.
+- Creating **particle effects** (`ParticleEmitter`) for dynamic game feedback.
 - Handling input via `InputConfig` (buttons on ESP32, scancodes on desktop).
 
 Internally, the menu scene instantiates the example scenes from `src/examples`
@@ -253,6 +256,31 @@ The example demonstrates both **sound effects** and **music**:
 
 Space Invaders is the recommended example to study first when you want to
 understand how to structure a full game on top of PixelRoot32.
+
+---
+
+## Example: BrickBreaker – Physics, Particles, and Advanced Audio
+
+The **BrickBreaker** example (under [`src/examples/Games/BrickBreaker`](src/examples/Games/BrickBreaker)) demonstrates a breakout-style game using physics-based collisions, particle effects, and synchronized SFX/BGM.
+
+**Color Palette**: GBC
+
+### Physics and Collisions
+
+- Uses `PhysicsActor` for the ball, handling world boundary collisions automatically through `onWorldCollision`.
+- Implements custom collision logic in `BallActor::onCollision` to differentiate between the paddle (bounce with angle) and bricks (damage/destruction).
+
+### Atari-Style Audio
+
+- **SFX**: Recreates the classic Atari Pong soundscape using `AudioEvent` with specific pulse wave frequencies (459Hz for paddle, 226Hz for walls, 113Hz for life loss).
+- **BGM**: Plays a minimal, looping background melody using the `MusicPlayer` with a soft triangle wave.
+- Audio is triggered by game events: hitting walls, bricks, or losing lives, providing immediate player feedback.
+
+### UI and Feedback
+
+- Uses `UILabel` for dynamic HUD elements (Score, Lives, Level).
+- Features a `ParticleEmitter` burst effect specifically when bricks are hit and destroyed.
+- Demonstrates real-time centering and visibility management for game state messages ("PRESS START", "GAME OVER").
 
 ---
 
