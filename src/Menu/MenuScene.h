@@ -7,6 +7,10 @@
 enum class MenuState {
     MAIN,
     GAMES,
+    UIELEMENTS,
+    BUTTONS,
+    LABELS,
+    CHECKBOXES,
     LAYOUTS
 };
 
@@ -29,14 +33,20 @@ private:
     pixelroot32::graphics::ui::UIButton* spriteDemoButton;
     pixelroot32::graphics::ui::UIButton* fontTestButton;
     pixelroot32::graphics::ui::UIButton* dualPaletteTestButton;
-    pixelroot32::graphics::ui::UIButton* layoutsButton;
+    pixelroot32::graphics::ui::UIButton* uiElementsButton;
     
     // Games menu buttons
     pixelroot32::graphics::ui::UIButton* pongButton;
     pixelroot32::graphics::ui::UIButton* snakeButton;
     pixelroot32::graphics::ui::UIButton* spaceInvadersButton;
     pixelroot32::graphics::ui::UIButton* tttButton;
-    
+
+    // UIElements menu buttons
+    pixelroot32::graphics::ui::UIButton* buttonsButton;
+    pixelroot32::graphics::ui::UIButton* labelsButton;
+    pixelroot32::graphics::ui::UIButton* checkboxesButton;
+    pixelroot32::graphics::ui::UIButton* layoutsButton;
+
     // Layouts menu buttons
     pixelroot32::graphics::ui::UIButton* verticalLayoutButton;
     pixelroot32::graphics::ui::UIButton* horizontalLayoutButton;
@@ -51,6 +61,7 @@ private:
     // Helper methods
     void setupMainMenu();
     void setupGamesMenu();
+    void setupUIElementsMenu();
     void setupLayoutsMenu();
     void showMenu(MenuState state);
     void goBack();
