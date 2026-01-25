@@ -5,6 +5,7 @@
 #include "graphics/Renderer.h"
 
 #include "examples/Games/Pong/PongScene.h"
+#include "examples/Games/BrickBreaker/BrickBreakerScene.h"
 #include "examples/Games/TicTacToe/TicTacToeScene.h"
 #include "examples/Games/Snake/SnakeScene.h"
 #include "examples/Games/SpaceInvaders/SpaceInvadersScene.h"
@@ -26,7 +27,7 @@ extern pr32::core::Engine engine;
 
 // Define instances here
 pong::PongScene pongScene;
-// brickbreaker::BrickBreakerScene brickScene;
+brickbreaker::BrickBreakerScene brickScene;
 tictactoe::TicTacToeScene tttScene;
 snake::SnakeScene snakeScene;
 spaceinvaders::SpaceInvadersScene spaceInvadersScene;
@@ -188,6 +189,10 @@ void MenuScene::setupGamesMenu() {
     pongButton = new pr32::graphics::ui::UIButton("PONG", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
         engine.setScene(&pongScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+
+    brickBrackeButton = new pr32::graphics::ui::UIButton("BRICK BRACKE", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
+        engine.setScene(&brickScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
     
     snakeButton = new pr32::graphics::ui::UIButton("SNAKE", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
         engine.setScene(&snakeScene);
@@ -272,6 +277,7 @@ void MenuScene::showMenu(MenuState state) {
         case MenuState::GAMES:
             titleLabel->setText("Games");
             buttonLayout->addElement(pongButton);
+            buttonLayout->addElement(brickBrackeButton);
             buttonLayout->addElement(snakeButton);
             buttonLayout->addElement(spaceInvadersButton);
             buttonLayout->addElement(tttButton);
