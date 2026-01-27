@@ -13,6 +13,7 @@
 #include "examples/DualPaletteTest/DualPaletteTestScene.h"
 #include "examples/FontTest/FontTestScene.h"
 #include "examples/SpritesDemo/SpritesDemoScene.h"
+#include "examples/TileMapDemo/TileMapDemoScene.h"
 #include "examples/UIElementDemo/CheckBoxDemo/CheckBoxScene.h"
 #include "examples/UIElementDemo/ButtonDemo/ButtonScene.h"
 #include "examples/UIElementDemo/LabelDemo/LabelScene.h"
@@ -41,6 +42,8 @@ verticallayoutdemo::VerticalLayoutDemoScene verticalLayoutDemoScene;
 horizontallayoutdemo::HorizontalLayoutDemoScene horizontalLayoutDemoScene;
 gridlayoutdemo::GridLayoutDemoScene gridLayoutDemoScene;
 anchorlayoutdemo::AnchorLayoutDemoScene anchorLayoutDemoScene;
+spritesdemo::SpritesDemoScene spritesDemoScene;
+tilemapdemo::TileMapDemoScene tileMapDemoScene;
 
 using Color = pr32::graphics::Color;
 
@@ -169,6 +172,13 @@ void MenuScene::setupMainMenu() {
         engine.setScene(&cameraDemoScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
     
+    spritesDemoButton = new pr32::graphics::ui::UIButton("SPRITES DEMO", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
+        engine.setScene(&spritesDemoScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+    
+    tileMapDemoButton = new pr32::graphics::ui::UIButton("TILEMAP DEMO", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
+        engine.setScene(&tileMapDemoScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
     fontTestButton = new pr32::graphics::ui::UIButton("FONT TEST", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
         engine.setScene(&fontTestScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
@@ -266,8 +276,9 @@ void MenuScene::showMenu(MenuState state) {
             titleLabel->setText("Main");
             buttonLayout->addElement(gamesButton);
             buttonLayout->addElement(cameraDemoButton);
-#ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
-            buttonLayout->addElement(spriteDemoButton);
+#ifdef PIXELROOT32_ENABLE_4BPP_SPRITES
+            buttonLayout->addElement(spritesDemoButton);
+            buttonLayout->addElement(tileMapDemoButton);
 #endif
             buttonLayout->addElement(fontTestButton);
             buttonLayout->addElement(dualPaletteTestButton);

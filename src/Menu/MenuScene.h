@@ -30,7 +30,8 @@ private:
     // Examples menu buttons
     pixelroot32::graphics::ui::UIButton* gamesButton;
     pixelroot32::graphics::ui::UIButton* cameraDemoButton;
-    pixelroot32::graphics::ui::UIButton* spriteDemoButton;
+    pixelroot32::graphics::ui::UIButton* spritesDemoButton;
+    pixelroot32::graphics::ui::UIButton* tileMapDemoButton;
     pixelroot32::graphics::ui::UIButton* fontTestButton;
     pixelroot32::graphics::ui::UIButton* dualPaletteTestButton;
     pixelroot32::graphics::ui::UIButton* uiElementsButton;

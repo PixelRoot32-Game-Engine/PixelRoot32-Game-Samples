@@ -10,12 +10,13 @@ It wires the engine to:
 - a **native desktop build (SDL2)** for fast iteration without hardware.
 
 From a simple menu you can launch several example games shipped with the engine,
-such as **Pong** (PICO8), **BrickBreaker** (Atari), **Snake** (GB), **Space Invaders** (NES), **Tic‑Tac‑Toe** (Custom Neon), and the
-**Camera Demo** (PR32). For deeper engine walk‑throughs based on real games, see:
-[`Space Invaders`](#example-space-invaders--engine-overview),
+such as **Pong** (PICO8), **BrickBreaker** (Atari), **Snake** (GB), **Space Invaders** (NES), **Tic‑Tac‑Toe** (Custom Neon), **TileMapDemo**, and **SpritesDemo**. For deeper engine walk‑throughs based on real games, see:
+[`SpaceInvaders`](#example-space-invaders--engine-overview),
 [`BrickBreaker`](#example-brickbreaker--physics-particles-and-advanced-audio),
 [`CameraDemo`](#example-camerademo--camera-parallax-and-platforms),
-and [`Snake`](#example-snake--entity-pooling-and-discrete-game-loop) below.
+[`Snake`](#example-snake--entity-pooling-and-discrete-game-loop),
+[`TileMapDemo`](#example-tilemapdemo--4bpp-tilemaps-and-assets),
+and [`SpritesDemo`](#example-spritesdemo--2bpp--4bpp-animations-and-matrices) below.
 
 ---
 
@@ -49,7 +50,7 @@ This project enables experimental sprite formats by default in `platformio.ini`:
 - `-D PIXELROOT32_ENABLE_2BPP_SPRITES`
 - `-D PIXELROOT32_ENABLE_4BPP_SPRITES`
 
-These features are **experimental**. If you encounter performance issues or compilation errors on your specific hardware, please **disable them** by commenting out these lines in `platformio.ini`. The `SpritesDemo` menu option will automatically disappear if 2bpp support is disabled.
+These features are **experimental**. If you encounter performance issues or compilation errors on your specific hardware, please **disable them** by commenting out these lines in `platformio.ini`. The `TileMapDemo` menu option demonstrates how to render tilemaps.
 
 ### 1. Open the project
 
@@ -390,7 +391,23 @@ This example specifically demonstrates how to use the **Custom Palette** feature
 
 ---
 
-## Example: SpritesDemo – 2bpp/4bpp Sprites & Animation Groups
+## Example: TileMapDemo – 4bpp Tilemaps and Assets
+
+The **TileMapDemo** example (under [`src/examples/TileMapDemo`](src/examples/TileMapDemo)) demonstrates how to render 4bpp (16 colors) tilemaps using the engine's tilemap system.
+
+**Color Palette**: PR32 Logo
+
+### Tilemap Rendering
+
+- Shows how to define and initialize a 4bpp tilemap (`PR32Logo.h`).
+- Demonstrates centering a tilemap on a 240x240 display.
+- Explains the use of `renderer.drawTileMap` to efficiently render large backgrounds or levels.
+
+> **Note:** A dedicated **TileMap Editor** tool is currently in development to simplify the creation of these maps. It will allow for visual painting, layer management, and direct export to the engine's **1bpp, 2bpp, and 4bpp** formats.
+
+---
+
+## Example: SpritesDemo – 2bpp & 4bpp Animations and Matrices
 
 > **⚠️ EXPERIMENTAL FEATURE WARNING**
 > This demo relies on **2bpp** and **4bpp** sprite support, which are experimental features. Ensure `-D PIXELROOT32_ENABLE_2BPP_SPRITES` and `-D PIXELROOT32_ENABLE_4BPP_SPRITES` are enabled in your `platformio.ini`.
@@ -406,18 +423,20 @@ The **SpritesDemo** example (under [`src/examples/SpritesDemo`](src/examples/Spr
 - **2bpp sprites** support 4 colors (Transparent + 3 colors) per sprite.
 - **4bpp sprites** support 16 colors (Transparent + 15 colors) per sprite.
 
-### 4bpp Sprite Stress Test
+### 2bpp Animation
 
-- The demo also renders a **vertical stack of 15 4bpp sprites** centered on the screen.
-- This serves as a performance stress test for the experimental 4bpp rendering path, ensuring the engine can handle multiple higher-depth sprites simultaneously with 2bpp animations.
+- Demonstrates a multi-frame animation (9 frames) using 2-bit-per-pixel sprites for memory efficiency.
+- Uses a 100ms frame interval for smooth character animation.
 
-### Animation Groups & Switching
+### 4bpp Matrix Layout
 
-- The demo defines **4 distinct animation groups** (ANIM_0 to ANIM_3), each containing a sequence of different characters.
-- A `SpritesDemoActor` manages the playback:
-  - **Frame Stepping**: Advances the animation frame every 150ms.
-  - **Group Switching**: Automatically cycles to the next animation group every 2 seconds.
-- This demonstrates how to decouple animation logic (`SpriteAnimation`) from rendering (`Renderer::drawMultiSprite`), allowing for dynamic and state-driven visuals.
+- Renders a **3x5 matrix of 15 unique 4bpp sprites** next to the animation.
+- This serves as a performance test for the experimental 4bpp rendering path, ensuring the engine can handle multiple higher-depth sprites simultaneously.
+
+### Centering and Layout
+
+- Shows how to calculate and position a group of mixed-format sprites to be perfectly centered on the 240x240 screen.
+- Demonstrates handling different sprite formats (2bpp vs 4bpp) within the same scene.
 
 > **Note:** The sprites used in this demo were generated using the [PixelRoot32-Sprite-Sheet-Compiler](https://github.com/PixelRoot32-Game-Engine/PixelRoot32-Sprite-Sheet-Compiler/tree/master).
 
@@ -441,6 +460,7 @@ For detailed engine documentation, refer to:
 ---
 
 ## License
+
 GameSample is **open-source** under the **MIT License**.
 
 ---
