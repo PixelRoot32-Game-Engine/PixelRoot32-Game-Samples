@@ -9,10 +9,12 @@
 #include "examples/Games/TicTacToe/TicTacToeScene.h"
 #include "examples/Games/Snake/SnakeScene.h"
 #include "examples/Games/SpaceInvaders/SpaceInvadersScene.h"
+#include "examples/Games/Metroidvania/MetroidvaniaScene.h"
 #include "examples/CameraDemo/CameraDemoScene.h"
 #include "examples/DualPaletteTest/DualPaletteTestScene.h"
 #include "examples/FontTest/FontTestScene.h"
 #include "examples/SpritesDemo/SpritesDemoScene.h"
+#include "examples/TileMapDemo/TileMapDemoScene.h"
 #include "examples/UIElementDemo/CheckBoxDemo/CheckBoxScene.h"
 #include "examples/UIElementDemo/ButtonDemo/ButtonScene.h"
 #include "examples/UIElementDemo/LabelDemo/LabelScene.h"
@@ -31,6 +33,8 @@ brickbreaker::BrickBreakerScene brickScene;
 tictactoe::TicTacToeScene tttScene;
 snake::SnakeScene snakeScene;
 spaceinvaders::SpaceInvadersScene spaceInvadersScene;
+metroidvania::MetroidvaniaScene metroidvaniaScene;
+
 camerademo::CameraDemoScene cameraDemoScene;
 dualpalettetest::DualPaletteTestScene dualPaletteTestScene;
 fonttest::FontTestScene fontTestScene;
@@ -41,6 +45,8 @@ verticallayoutdemo::VerticalLayoutDemoScene verticalLayoutDemoScene;
 horizontallayoutdemo::HorizontalLayoutDemoScene horizontalLayoutDemoScene;
 gridlayoutdemo::GridLayoutDemoScene gridLayoutDemoScene;
 anchorlayoutdemo::AnchorLayoutDemoScene anchorLayoutDemoScene;
+spritesdemo::SpritesDemoScene spritesDemoScene;
+tilemapdemo::TileMapDemoScene tileMapDemoScene;
 
 using Color = pr32::graphics::Color;
 
@@ -169,6 +175,13 @@ void MenuScene::setupMainMenu() {
         engine.setScene(&cameraDemoScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
     
+    spritesDemoButton = new pr32::graphics::ui::UIButton("SPRITES DEMO", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
+        engine.setScene(&spritesDemoScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+    
+    tileMapDemoButton = new pr32::graphics::ui::UIButton("TILEMAP DEMO", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
+        engine.setScene(&tileMapDemoScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
     fontTestButton = new pr32::graphics::ui::UIButton("FONT TEST", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
         engine.setScene(&fontTestScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
@@ -204,6 +217,10 @@ void MenuScene::setupGamesMenu() {
     
     tttButton = new pr32::graphics::ui::UIButton("TIC TAC TOE", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
         engine.setScene(&tttScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+
+    metroidvaniaButton = new pr32::graphics::ui::UIButton("METROIDVANIA", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
+        engine.setScene(&metroidvaniaScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
 }
 
@@ -266,8 +283,9 @@ void MenuScene::showMenu(MenuState state) {
             titleLabel->setText("Main");
             buttonLayout->addElement(gamesButton);
             buttonLayout->addElement(cameraDemoButton);
-#ifdef PIXELROOT32_ENABLE_2BPP_SPRITES
-            buttonLayout->addElement(spriteDemoButton);
+#ifdef PIXELROOT32_ENABLE_4BPP_SPRITES
+            buttonLayout->addElement(spritesDemoButton);
+            buttonLayout->addElement(tileMapDemoButton);
 #endif
             buttonLayout->addElement(fontTestButton);
             buttonLayout->addElement(dualPaletteTestButton);
@@ -276,6 +294,9 @@ void MenuScene::showMenu(MenuState state) {
             
         case MenuState::GAMES:
             titleLabel->setText("Games");
+#ifdef PIXELROOT32_ENABLE_4BPP_SPRITES
+            buttonLayout->addElement(metroidvaniaButton);
+#endif
             buttonLayout->addElement(pongButton);
             buttonLayout->addElement(brickBrackeButton);
             buttonLayout->addElement(snakeButton);
@@ -297,6 +318,8 @@ void MenuScene::showMenu(MenuState state) {
             buttonLayout->addElement(horizontalLayoutButton);
             buttonLayout->addElement(gridLayoutButton);
             buttonLayout->addElement(anchorLayoutButton);
+            break;
+        case MenuState::CHECKBOXES:
             break;
     }
     

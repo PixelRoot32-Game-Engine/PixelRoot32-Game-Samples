@@ -3,12 +3,10 @@
 #include "graphics/Renderer.h"
 #include "graphics/Color.h"
 #include "Config.h"
-#include "assets/Sprites.h"
-#include "assets/SpritesPopup.h"
 
-namespace spritesdemo {
+namespace tilemapdemo {
 
-class SpritesDemoScene : public pixelroot32::core::Scene {
+class TileMapDemoScene : public pixelroot32::core::Scene {
 public:
     void init() override;
     void update(unsigned long deltaTime) override;

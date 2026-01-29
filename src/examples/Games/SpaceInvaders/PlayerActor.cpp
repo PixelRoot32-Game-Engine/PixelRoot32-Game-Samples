@@ -65,7 +65,7 @@ void PlayerActor::draw(pr32::graphics::Renderer& renderer) {
                         static_cast<int>(y),
                         SPRITE_SCALE,
                         SPRITE_SCALE,
-                        Color::White);
+                        Color::Yellow);
 }
 
 pr32::core::Rect PlayerActor::getHitBox() {

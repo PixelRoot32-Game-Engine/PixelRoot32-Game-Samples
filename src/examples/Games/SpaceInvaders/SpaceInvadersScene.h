@@ -10,7 +10,7 @@ namespace spaceinvaders {
     class AlienActor;
     class ProjectileActor;
     class BunkerActor;
-    class TilemapBackground;
+    class StarfieldBackground;
 
     struct EnemyExplosion {
         bool active;
@@ -60,7 +60,7 @@ namespace spaceinvaders {
         void cleanup();
 
         // Custom entity management (due to MAX_ENTITIES limit in base Scene)
-        TilemapBackground* background;
+        StarfieldBackground* background;
         PlayerActor* player;
         std::vector<AlienActor*> aliens;
         std::vector<ProjectileActor*> projectiles;

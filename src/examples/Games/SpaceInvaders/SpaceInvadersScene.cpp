@@ -9,6 +9,7 @@
 #include "audio/AudioMusicTypes.h"
 #include <cstdlib>
 #include <cstdio>
+#include "assets/Background.h"
 
 namespace pr32 = pixelroot32;
 extern pr32::core::Engine engine;
@@ -17,7 +18,6 @@ namespace spaceinvaders {
 
 using pixelroot32::graphics::Sprite;
 using pixelroot32::graphics::SpriteAnimationFrame;
-using pixelroot32::graphics::TileMap;
 using pixelroot32::audio::AudioEvent;
 using pixelroot32::audio::WaveType;
 using pixelroot32::audio::MusicNote;
@@ -28,87 +28,16 @@ using pixelroot32::audio::Note;
 
 #ifdef PIXELROOT32_ENABLE_SCENE_ARENA
 using pixelroot32::core::SceneArena;
+using pixelroot32::core::arenaNew;
 
 static unsigned char SPACE_INVADERS_SCENE_ARENA_BUFFER[8192];
-
-template<typename T, typename... Args>
-T* arenaNew(SceneArena& arena, Args&&... args) {
-    void* mem = arena.allocate(sizeof(T), alignof(T));
-    if (!mem) {
-        return nullptr;
-    }
-    return new (mem) T(static_cast<Args&&>(args)...);
-}
 #endif
 
-static constexpr int TILE_SIZE = 8;
-static constexpr int TILEMAP_WIDTH = DISPLAY_WIDTH / TILE_SIZE;
-static constexpr int TILEMAP_HEIGHT = DISPLAY_HEIGHT / TILE_SIZE;
 
-static const uint16_t TILE_EMPTY_BITS[] = {
-    0x0000,
-    0x0000,
-    0x0000,
-    0x0000,
-    0x0000,
-    0x0000,
-    0x0000,
-    0x0000
-};
-
-static const uint16_t TILE_STAR_BITS[] = {
-    0x0000,
-    0x0000,
-    0x0100,
-    0x0380,
-    0x0100,
-    0x0000,
-    0x0000,
-    0x0000
-};
-
-static const Sprite TILE_SPRITES[] = {
-    { TILE_EMPTY_BITS, TILE_SIZE, TILE_SIZE },
-    { TILE_STAR_BITS,  TILE_SIZE, TILE_SIZE }
-};
-
-static uint8_t STARFIELD_INDICES[TILEMAP_WIDTH * TILEMAP_HEIGHT];
-
-static TileMap STARFIELD_MAP = {
-    STARFIELD_INDICES,
-    static_cast<uint8_t>(TILEMAP_WIDTH),
-    static_cast<uint8_t>(TILEMAP_HEIGHT),
-    TILE_SPRITES,
-    TILE_SIZE,
-    TILE_SIZE,
-    static_cast<uint16_t>(sizeof(TILE_SPRITES) / sizeof(Sprite))
-};
-
-static void initStarfield() {
-    static bool initialized = false;
-    if (initialized) {
-        return;
-    }
-    initialized = true;
-
-    int total = TILEMAP_WIDTH * TILEMAP_HEIGHT;
-    for (int i = 0; i < total; ++i) {
-        int x = i % TILEMAP_WIDTH;
-        int y = i / TILEMAP_WIDTH;
-        int pattern = (x * 3 + y * 5);
-        if (pattern % 11 == 0) {
-            STARFIELD_INDICES[i] = 1;
-        } else {
-            STARFIELD_INDICES[i] = 0;
-        }
-    }
-}
-
-class TilemapBackground : public pr32::core::Entity {
+class StarfieldBackground : public pr32::core::Entity {
 public:
-    TilemapBackground(const TileMap& map)
-        : pr32::core::Entity(0.0f, 0.0f, DISPLAY_WIDTH, DISPLAY_HEIGHT, pr32::core::EntityType::GENERIC),
-          tilemap(map) {
+    StarfieldBackground()
+        : pr32::core::Entity(0.0f, 0.0f, DISPLAY_WIDTH, DISPLAY_HEIGHT, pr32::core::EntityType::GENERIC) {
         setRenderLayer(0);
     }
 
@@ -116,11 +45,13 @@ public:
     }
 
     void draw(pr32::graphics::Renderer& renderer) override {
-        renderer.drawTileMap(tilemap, 0, 0, pr32::graphics::Color::DarkBlue);
+        renderer.drawFilledRectangle(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, pr32::graphics::Color::Black);
+        for (int i = 0; i < background_assets::STAR_COUNT; ++i) {
+            renderer.drawPixel(static_cast<int>(background_assets::STAR_X[i]),
+                               static_cast<int>(background_assets::STAR_Y[i]),
+                               pr32::graphics::Color::White);
+        }
     }
-
-private:
-    const TileMap& tilemap;
 };
 
 // Base four-note bass pattern: "tu tu tu tu"
@@ -334,8 +265,7 @@ SpaceInvadersScene::SpaceInvadersScene()
       fireInputReady(false),
       currentMusicTempoFactor(1.0f) {
 
-    initStarfield();
-    background = new TilemapBackground(STARFIELD_MAP);
+    background = new StarfieldBackground();
     addEntity(background);
 
     for (int i = 0; i < MaxEnemyExplosions; ++i) {
@@ -355,10 +285,11 @@ SpaceInvadersScene::~SpaceInvadersScene() {
 }
 
 void SpaceInvadersScene::init() {
-    pr32::graphics::setPalette(pr32::graphics::PaletteType::NES);
  #ifdef PIXELROOT32_ENABLE_SCENE_ARENA
     arena.init(SPACE_INVADERS_SCENE_ARENA_BUFFER, sizeof(SPACE_INVADERS_SCENE_ARENA_BUFFER));
 #endif
+    pr32::graphics::setSpritePalette(pr32::graphics::PaletteType::NES);
+    background_assets::init();
     resetGame();
 
     engine.getMusicPlayer().play(BGM_SLOW_TRACK);
