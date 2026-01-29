@@ -42,6 +42,7 @@ private:
     pixelroot32::graphics::ui::UIButton* snakeButton;
     pixelroot32::graphics::ui::UIButton* spaceInvadersButton;
     pixelroot32::graphics::ui::UIButton* tttButton;
+    pixelroot32::graphics::ui::UIButton* metroidvaniaButton;
 
     // UIElements menu buttons
     pixelroot32::graphics::ui::UIButton* buttonsButton;

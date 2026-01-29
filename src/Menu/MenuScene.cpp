@@ -9,6 +9,7 @@
 #include "examples/Games/TicTacToe/TicTacToeScene.h"
 #include "examples/Games/Snake/SnakeScene.h"
 #include "examples/Games/SpaceInvaders/SpaceInvadersScene.h"
+#include "examples/Games/Metroidvania/MetroidvaniaScene.h"
 #include "examples/CameraDemo/CameraDemoScene.h"
 #include "examples/DualPaletteTest/DualPaletteTestScene.h"
 #include "examples/FontTest/FontTestScene.h"
@@ -32,6 +33,8 @@ brickbreaker::BrickBreakerScene brickScene;
 tictactoe::TicTacToeScene tttScene;
 snake::SnakeScene snakeScene;
 spaceinvaders::SpaceInvadersScene spaceInvadersScene;
+metroidvania::MetroidvaniaScene metroidvaniaScene;
+
 camerademo::CameraDemoScene cameraDemoScene;
 dualpalettetest::DualPaletteTestScene dualPaletteTestScene;
 fonttest::FontTestScene fontTestScene;
@@ -215,6 +218,10 @@ void MenuScene::setupGamesMenu() {
     tttButton = new pr32::graphics::ui::UIButton("TIC TAC TOE", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
         engine.setScene(&tttScene);
     }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
+
+    metroidvaniaButton = new pr32::graphics::ui::UIButton("METROIDVANIA", menu::BTN_SELECT, 0, 0, btnW, btnH, []() {
+        engine.setScene(&metroidvaniaScene);
+    }, pr32::graphics::ui::TextAlignment::CENTER, menu::BTN_FONT_SIZE);
 }
 
 void MenuScene::setupUIElementsMenu() {
@@ -292,6 +299,7 @@ void MenuScene::showMenu(MenuState state) {
             buttonLayout->addElement(snakeButton);
             buttonLayout->addElement(spaceInvadersButton);
             buttonLayout->addElement(tttButton);
+            buttonLayout->addElement(metroidvaniaButton);
             break;
         
         case MenuState::UIELEMENTS: 
