@@ -18,7 +18,6 @@ namespace spaceinvaders {
 
 using pixelroot32::graphics::Sprite;
 using pixelroot32::graphics::SpriteAnimationFrame;
-using pixelroot32::graphics::TileMap;
 using pixelroot32::audio::AudioEvent;
 using pixelroot32::audio::WaveType;
 using pixelroot32::audio::MusicNote;
@@ -35,11 +34,10 @@ static unsigned char SPACE_INVADERS_SCENE_ARENA_BUFFER[8192];
 #endif
 
 
-class TilemapBackground : public pr32::core::Entity {
+class StarfieldBackground : public pr32::core::Entity {
 public:
-    TilemapBackground(const pixelroot32::graphics::TileMap& map)
-        : pr32::core::Entity(0.0f, 0.0f, DISPLAY_WIDTH, DISPLAY_HEIGHT, pr32::core::EntityType::GENERIC),
-          tilemap(map) {
+    StarfieldBackground()
+        : pr32::core::Entity(0.0f, 0.0f, DISPLAY_WIDTH, DISPLAY_HEIGHT, pr32::core::EntityType::GENERIC) {
         setRenderLayer(0);
     }
 
@@ -47,11 +45,13 @@ public:
     }
 
     void draw(pr32::graphics::Renderer& renderer) override {
-        renderer.drawTileMap(tilemap, 0, 0, pr32::graphics::Color::DarkBlue);
+        renderer.drawFilledRectangle(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, pr32::graphics::Color::Black);
+        for (int i = 0; i < background_assets::STAR_COUNT; ++i) {
+            renderer.drawPixel(static_cast<int>(background_assets::STAR_X[i]),
+                               static_cast<int>(background_assets::STAR_Y[i]),
+                               pr32::graphics::Color::White);
+        }
     }
-
-private:
-    const pixelroot32::graphics::TileMap& tilemap;
 };
 
 // Base four-note bass pattern: "tu tu tu tu"
@@ -265,7 +265,7 @@ SpaceInvadersScene::SpaceInvadersScene()
       fireInputReady(false),
       currentMusicTempoFactor(1.0f) {
 
-    background = new TilemapBackground(background_assets::background);
+    background = new StarfieldBackground();
     addEntity(background);
 
     for (int i = 0; i < MaxEnemyExplosions; ++i) {

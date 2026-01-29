@@ -319,6 +319,8 @@ void MenuScene::showMenu(MenuState state) {
             buttonLayout->addElement(gridLayoutButton);
             buttonLayout->addElement(anchorLayoutButton);
             break;
+        case MenuState::CHECKBOXES:
+            break;
     }
     
     titleLabel->centerX(screenWidth);
