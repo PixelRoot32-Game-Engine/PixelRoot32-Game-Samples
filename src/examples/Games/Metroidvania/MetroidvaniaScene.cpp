@@ -105,6 +105,7 @@ void MetroidvaniaScene::init() {
                       metroidvaniasceneonetilemap::MAP_WIDTH, 
                       metroidvaniasceneonetilemap::MAP_HEIGHT, 
                       metroidvaniasceneonetilemap::TILE_SIZE);
+    player->buildStairsCache();  // RAM cache to avoid repeated PROGMEM reads on ESP32
 
     // Pass platform layer data to the player for optimized tile-based collision.
     player->setPlatformTiles(metroidvaniasceneonetilemap::platforms.indices,

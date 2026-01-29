@@ -51,6 +51,9 @@ public:
     /** @brief Assigns platform layer data from the map. */
     void setPlatformTiles(const uint8_t* indices, int width, int height, int tileSize);
 
+    /** @brief Builds RAM cache of stairs mask from PROGMEM indices (call once after setStairs). Speeds up collision on ESP32. */
+    void buildStairsCache();
+
 private:
     unsigned long timeAccumulator = 0;   // Accumulator for animation timing
     uint8_t currentFrame = 0;           // Current animation frame
@@ -71,6 +74,11 @@ private:
     int stairsWidth = 0;
     int stairsHeight = 0;
     int stairsTileSize = 0;
+
+    // Stairs RAM cache (1 bit per cell) to avoid repeated PROGMEM reads on ESP32. Max 32x32 = 128 bytes.
+    static constexpr int STAIRS_CACHE_MAX_BYTES = (32 * 32 + 7) / 8;
+    uint8_t stairsMask[STAIRS_CACHE_MAX_BYTES] = {};
+    bool stairsMaskReady = false;
 
     // Platform layer data (Tile-based collision)
     const uint8_t* platformIndices = nullptr;

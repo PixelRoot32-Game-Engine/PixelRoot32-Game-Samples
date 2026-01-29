@@ -6,6 +6,9 @@
 #include "Config.h"
 #include "graphics/Renderer.h"
 #include "graphics/Color.h"
+#if defined(ESP32) || defined(ESP8266)
+#include <pgmspace.h>
+#endif
 
 namespace metroidvania {
 
@@ -78,12 +81,33 @@ void PlayerActor::setPlatformTiles(const uint8_t* indices, int width, int height
     platformTileSize = tileSize;
 }
 
+void PlayerActor::buildStairsCache() {
+    if (!stairsIndices || stairsWidth <= 0 || stairsHeight <= 0) return;
+    const int totalCells = stairsWidth * stairsHeight;
+    if (totalCells > STAIRS_CACHE_MAX_BYTES * 8) return;
+
+    for (int i = 0; i < STAIRS_CACHE_MAX_BYTES; ++i) stairsMask[i] = 0;
+
+    for (int r = 0; r < stairsHeight; ++r) {
+        for (int c = 0; c < stairsWidth; ++c) {
+            const int idx = c + r * stairsWidth;
+#if defined(ESP32) || defined(ESP8266)
+            uint8_t v = pgm_read_byte(stairsIndices + idx);
+#else
+            uint8_t v = stairsIndices[idx];
+#endif
+            if (v != 0) stairsMask[idx >> 3] |= (1u << (idx & 7));
+        }
+    }
+    stairsMaskReady = true;
+}
+
 /**
  * @brief Checks if the player's center overlaps a stairs tile.
  * Multiple vertical points are checked to allow entering the stairs from top or bottom.
  */
 bool PlayerActor::isOverlappingStairs() const {
-    if (!stairsIndices) return false;
+    if (!stairsIndices && !stairsMaskReady) return false;
     
     float centerX = x + width / 2.0f;
     int col = static_cast<int>(centerX) / stairsTileSize;
@@ -91,12 +115,16 @@ bool PlayerActor::isOverlappingStairs() const {
     if (col < 0 || col >= stairsWidth) return false;
 
     // Check points: head, center, feet and slightly below feet.
-    // The extra point below feet allows detecting the ladder when standing on a platform.
     float yPoints[] = { y, y + height / 2.0f, y + height - 1.0f, y + height + 2.0f };
     for (float py : yPoints) {
         int row = static_cast<int>(py) / stairsTileSize;
         if (row >= 0 && row < stairsHeight) {
-            if (stairsIndices[col + row * stairsWidth] != 0) return true;
+            const int idx = col + row * stairsWidth;
+            if (stairsMaskReady) {
+                if (stairsMask[idx >> 3] & (1u << (idx & 7))) return true;
+            } else {
+                if (stairsIndices[idx] != 0) return true;
+            }
         }
     }
     
@@ -204,10 +232,15 @@ void PlayerActor::update(unsigned long deltaTime) {
                 if (r >= 0 && r < platformHeight && c >= 0 && c < platformWidth) {
                     if (platformIndices[c + r * platformWidth] != 0) {
                         
-                        // Check if there is a ladder at this collision point
-                        bool hasLadder = (stairsIndices != nullptr) && 
-                                         (c >= 0 && c < stairsWidth && r >= 0 && r < stairsHeight) && 
-                                         (stairsIndices[c + r * stairsWidth] != 0);
+                        // Check if there is a ladder at this collision point (use RAM cache on ESP32)
+                        bool hasLadder = (stairsMaskReady || stairsIndices != nullptr) &&
+                                         (c >= 0 && c < stairsWidth && r >= 0 && r < stairsHeight);
+                        if (hasLadder) {
+                            const int sidx = c + r * stairsWidth;
+                            hasLadder = stairsMaskReady
+                                ? (stairsMask[sidx >> 3] & (1u << (sidx & 7))) != 0
+                                : (stairsIndices[sidx] != 0);
+                        }
 
                         // EXCEPTION: If there's a ladder, allow passing through the platform in certain conditions
                         if (hasLadder) {
