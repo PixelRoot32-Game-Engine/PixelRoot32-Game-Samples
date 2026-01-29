@@ -118,14 +118,14 @@ void MetroidvaniaScene::update(unsigned long deltaTime) {
     
     // Input management: map buttons to directions.
     float moveDir = 0.0f;
-    if (input.isButtonDown(3)) moveDir += 1.0f;  // Right
-    if (input.isButtonDown(2)) moveDir -= 1.0f;  // Left
+    if (input.isButtonDown(BTN_RIGHT)) moveDir += 1.0f;  // Right
+    if (input.isButtonDown(BTN_LEFT)) moveDir -= 1.0f;  // Left
 
     float vDir = 0.0f;
-    if (input.isButtonDown(0)) vDir -= 1.0f;     // Up
-    if (input.isButtonDown(1)) vDir += 1.0f;     // Down
+    if (input.isButtonDown(BTN_UP)) vDir -= 1.0f;     // Up
+    if (input.isButtonDown(BTN_DOWN)) vDir += 1.0f;     // Down
 
-    bool jumpPressed = input.isButtonPressed(4);  // Jump (A / Space)
+    bool jumpPressed = input.isButtonPressed(BTN_JUMP);  // Jump (A / Space)
     
     // Send processed inputs to the player actor.
     if (player) player->setInput(moveDir, vDir, jumpPressed);

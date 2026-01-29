@@ -9,6 +9,12 @@ struct PlatformRect {
     float h;
 };
 
+constexpr int BTN_UP = 0;
+constexpr int BTN_DOWN = 1;
+constexpr int BTN_LEFT = 2;
+constexpr int BTN_RIGHT = 3;
+constexpr int BTN_JUMP = 4;
+
 constexpr int PLAYER_WIDTH = 8;
 constexpr int PLAYER_HEIGHT = 8;
 
