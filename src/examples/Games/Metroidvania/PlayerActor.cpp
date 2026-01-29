@@ -71,6 +71,13 @@ void PlayerActor::setStairs(const uint8_t* indices, int width, int height, int t
     stairsTileSize = tileSize;
 }
 
+void PlayerActor::setPlatformTiles(const uint8_t* indices, int width, int height, int tileSize) {
+    platformIndices = indices;
+    platformWidth = width;
+    platformHeight = height;
+    platformTileSize = tileSize;
+}
+
 /**
  * @brief Checks if the player's center overlaps a stairs tile.
  * Multiple vertical points are checked to allow entering the stairs from top or bottom.
@@ -152,72 +159,111 @@ void PlayerActor::update(unsigned long deltaTime) {
         setWorldSize(DISPLAY_WIDTH, DISPLAY_HEIGHT);
     }
 
-    // --- MANUAL ENVIRONMENT COLLISION RESOLUTION ---
+    // --- TILE-BASED ENVIRONMENT COLLISION RESOLUTION ---
     // Note: Separated into X and Y for more precise response.
+    // This is much more efficient (O(1)) than iterating over all platform rects (O(N)).
 
     // 1. Horizontal movement and collision
     x += vx * dt;
-    if (platforms && platformCount > 0) {
-        for (int i = 0; i < platformCount; ++i) {
-            const PlatformRect& p = platforms[i];
-            if (x < p.x + p.w && x + width > p.x && y < p.y + p.h && y + height > p.y) {
-                if (vx > 0) x = p.x - width;
-                else if (vx < 0) x = p.x + p.w;
-                vx = 0;
+    if (platformIndices) {
+        // Check collision at 4 points (top-left, top-right, bottom-left, bottom-right)
+        // or more simply, check columns around the player's bounding box.
+        int startCol = static_cast<int>(x) / platformTileSize;
+        int endCol = static_cast<int>(x + width - 1) / platformTileSize;
+        int startRow = static_cast<int>(y) / platformTileSize;
+        int endRow = static_cast<int>(y + height - 1) / platformTileSize;
+
+        for (int r = startRow; r <= endRow; ++r) {
+            for (int c = startCol; c <= endCol; ++c) {
+                if (r >= 0 && r < platformHeight && c >= 0 && c < platformWidth) {
+                    if (platformIndices[c + r * platformWidth] != 0) {
+                        // Collision detected
+                        if (vx > 0) x = c * platformTileSize - width;
+                        else if (vx < 0) x = (c + 1) * platformTileSize;
+                        vx = 0;
+                        break;
+                    }
+                }
             }
         }
     }
 
     // 2. Vertical movement and collision
     y += vy * dt;
+    bool wasOnGround = onGround;
     onGround = false;
-    if (platforms && platformCount > 0) {
-        for (int i = 0; i < platformCount; ++i) {
-            const PlatformRect& p = platforms[i];
-            if (x < p.x + p.w && x + width > p.x && y < p.y + p.h && y + height > p.y) {
-                
-                // Check if there is a ladder at this collision point
-                int ladderCol = static_cast<int>(x + width / 2.0f) / stairsTileSize;
-                int ladderRow = static_cast<int>(p.y + p.h / 2.0f) / stairsTileSize;
-                bool hasLadder = (ladderCol >= 0 && ladderCol < stairsWidth && ladderRow >= 0 && ladderRow < stairsHeight) && 
-                                 (stairsIndices[ladderCol + ladderRow * stairsWidth] != 0);
+    if (platformIndices) {
+        int startCol = static_cast<int>(x) / platformTileSize;
+        int endCol = static_cast<int>(x + width - 1) / platformTileSize;
+        int startRow = static_cast<int>(y) / platformTileSize;
+        int endRow = static_cast<int>(y + height - 1) / platformTileSize;
 
-                // EXCEPTION: If there's a ladder, allow passing through the platform in certain conditions
-                if (hasLadder) {
-                    // Moving UP: always pass through
-                    if (vy < 0) continue;
-                    
-                    // Climbing: pass through if moving vertically
-                    if (currentState == PlayerState::CLIMBING) {
-                        if (verticalDir > 0 && vy > 0) continue; // Actively climbing down
+        for (int r = startRow; r <= endRow; ++r) {
+            bool collisionFound = false;
+            for (int c = startCol; c <= endCol; ++c) {
+                if (r >= 0 && r < platformHeight && c >= 0 && c < platformWidth) {
+                    if (platformIndices[c + r * platformWidth] != 0) {
                         
-                        if (verticalDir == 0) {
-                            // If no input, land on top if falling onto it
-                            if (vy > 0 && y + height <= p.y + 4.0f) {
-                                // Let it collide below
-                            } else {
-                                continue;
+                        // Check if there is a ladder at this collision point
+                        bool hasLadder = (stairsIndices != nullptr) && 
+                                         (c >= 0 && c < stairsWidth && r >= 0 && r < stairsHeight) && 
+                                         (stairsIndices[c + r * stairsWidth] != 0);
+
+                        // EXCEPTION: If there's a ladder, allow passing through the platform in certain conditions
+                        if (hasLadder) {
+                            if (vy < 0) continue; // Moving UP: always pass through
+                            if (currentState == PlayerState::CLIMBING) {
+                                if (verticalDir > 0 && vy > 0) continue; // Actively climbing down
+                                if (verticalDir == 0) {
+                                    // If no input, land on top if falling onto it
+                                    if (vy > 0 && y + height <= r * platformTileSize + 4.0f) {
+                                        // Let it collide below
+                                    } else {
+                                        continue;
+                                    }
+                                }
                             }
                         }
+
+                        // Standard collision resolution (floor/ceiling)
+                        if (vy > 0) { // Falling
+                            y = r * platformTileSize - height;
+                            onGround = true;
+                        }
+                        else if (vy < 0) { // Jumping
+                            y = (r + 1) * platformTileSize;
+                        }
+                        vy = 0;
+                        collisionFound = true;
+                        break;
                     }
                 }
-
-                // Standard collision resolution (floor/ceiling)
-                if (vy > 0) { // Falling
-                    y = p.y - height;
-                    onGround = true;
-                }
-                else if (vy < 0) { // Jumping
-                    y = p.y + p.h;
-                }
-                vy = 0;
             }
+            if (collisionFound) break;
         }
     }
 
     // World bounds (screen edges)
     resolveWorldBounds();
     if (worldCollisionInfo.bottom) onGround = true;
+
+    // Fix: If we were on ground and we are not moving upwards, and we haven't detected a collision yet,
+    // check if there's still ground exactly below us to maintain onGround state.
+    if (!onGround && wasOnGround && vy >= 0) {
+        float checkY = y + height + 1.0f;
+        int startCol = static_cast<int>(x) / platformTileSize;
+        int endCol = static_cast<int>(x + width - 1) / platformTileSize;
+        int r = static_cast<int>(checkY) / platformTileSize;
+
+        if (r >= 0 && r < platformHeight) {
+            for (int c = startCol; c <= endCol; ++c) {
+                if (c >= 0 && c < platformWidth && platformIndices[c + r * platformWidth] != 0) {
+                    onGround = true;
+                    break;
+                }
+            }
+        }
+    }
 
     // State machine for animations
     PlayerState nextState = currentState;
@@ -254,20 +300,6 @@ void PlayerActor::update(unsigned long deltaTime) {
 void PlayerActor::draw(pr32::graphics::Renderer& renderer) {
     const auto& sprite = getSpriteByState();
     renderer.drawSprite(sprite, static_cast<int>(x), static_cast<int>(y), facingLeft);
-}
-
-void PlayerActor::drawDebugPlatformHitboxes(pr32::graphics::Renderer& renderer) {
-    if (!platforms || platformCount <= 0) return;
-    for (int i = 0; i < platformCount; ++i) {
-        const auto& p = platforms[i];
-        renderer.drawRectangle(
-            static_cast<int>(p.x),
-            static_cast<int>(p.y),
-            static_cast<int>(p.w),
-            static_cast<int>(p.h),
-            pr32::graphics::Color::Red
-        );
-    }
 }
 
 pr32::core::Rect PlayerActor::getHitBox() {

@@ -9,9 +9,6 @@
 #include "assets/PlayerPalette.h"
 #include <cstdint>
 
-// Debug: draw red rectangles over platform hitboxes. Comment out to disable.
-// #define METROIDVANIA_DEBUG_PLATFORM_HITBOXES
-
 namespace {
     constexpr int MAX_PLATFORM_RECTS = metroidvaniasceneonetilemap::MAP_WIDTH * metroidvaniasceneonetilemap::MAP_HEIGHT;
 }
@@ -133,28 +130,11 @@ void MetroidvaniaScene::init() {
                       metroidvaniasceneonetilemap::MAP_HEIGHT, 
                       metroidvaniasceneonetilemap::TILE_SIZE);
 
-    // Build a list of collision rectangles from the platforms layer.
-    // The engine's CollisionSystem manages Actor vs Actor.
-    // For environment (tiles) collisions, in this example we resolve them manually
-    // by passing this list of rectangles to the PlayerActor.
-    static metroidvania::PlatformRect platformRects[MAX_PLATFORM_RECTS];
-    int platformCount = 0;
-    const int tw = metroidvaniasceneonetilemap::TILE_SIZE;
-    const int mw = metroidvaniasceneonetilemap::MAP_WIDTH;
-    const int mh = metroidvaniasceneonetilemap::MAP_HEIGHT;
-    for (int row = 0; row < mh && platformCount < MAX_PLATFORM_RECTS; ++row) {
-        for (int col = 0; col < mw && platformCount < MAX_PLATFORM_RECTS; ++col) {
-            int idx = col + row * mw;
-            if (metroidvaniasceneonetilemap::platforms.indices[idx] != 0) {
-                platformRects[platformCount].x = static_cast<float>(col * tw);
-                platformRects[platformCount].y = static_cast<float>(row * tw);
-                platformRects[platformCount].w = static_cast<float>(tw);
-                platformRects[platformCount].h = static_cast<float>(tw);
-                ++platformCount;
-            }
-        }
-    }
-    player->setPlatforms(platformRects, platformCount);
+    // Pass platform layer data to the player for optimized tile-based collision.
+    player->setPlatformTiles(metroidvaniasceneonetilemap::platforms.indices,
+                             metroidvaniasceneonetilemap::MAP_WIDTH,
+                             metroidvaniasceneonetilemap::MAP_HEIGHT,
+                             metroidvaniasceneonetilemap::TILE_SIZE);
 }
 
 void MetroidvaniaScene::update(unsigned long deltaTime) {
@@ -180,9 +160,6 @@ void MetroidvaniaScene::update(unsigned long deltaTime) {
 
 void MetroidvaniaScene::draw(pr32::graphics::Renderer& renderer) {
     pixelroot32::core::Scene::draw(renderer);
-#ifdef METROIDVANIA_DEBUG_PLATFORM_HITBOXES
-    if (player) player->drawDebugPlatformHitboxes(renderer);
-#endif
 }
 
 }

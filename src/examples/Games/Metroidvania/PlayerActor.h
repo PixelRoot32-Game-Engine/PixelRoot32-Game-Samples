@@ -48,8 +48,8 @@ public:
     /** @brief Assigns stairs layer data from the map. */
     void setStairs(const uint8_t* indices, int width, int height, int tileSize);
 
-    /** @brief Debug utility to visualize platform hitboxes. */
-    void drawDebugPlatformHitboxes(pixelroot32::graphics::Renderer& renderer);
+    /** @brief Assigns platform layer data from the map. */
+    void setPlatformTiles(const uint8_t* indices, int width, int height, int tileSize);
 
 private:
     unsigned long timeAccumulator = 0;   // Accumulator for animation timing
@@ -71,6 +71,12 @@ private:
     int stairsWidth = 0;
     int stairsHeight = 0;
     int stairsTileSize = 0;
+
+    // Platform layer data (Tile-based collision)
+    const uint8_t* platformIndices = nullptr;
+    int platformWidth = 0;
+    int platformHeight = 0;
+    int platformTileSize = 0;
 
     /** @brief Checks if the player is overlapping a stairs area. */
     bool isOverlappingStairs() const;

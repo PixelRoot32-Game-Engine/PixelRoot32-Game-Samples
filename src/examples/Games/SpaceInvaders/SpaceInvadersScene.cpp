@@ -29,17 +29,9 @@ using pixelroot32::audio::Note;
 
 #ifdef PIXELROOT32_ENABLE_SCENE_ARENA
 using pixelroot32::core::SceneArena;
+using pixelroot32::core::arenaNew;
 
 static unsigned char SPACE_INVADERS_SCENE_ARENA_BUFFER[8192];
-
-template<typename T, typename... Args>
-T* arenaNew(SceneArena& arena, Args&&... args) {
-    void* mem = arena.allocate(sizeof(T), alignof(T));
-    if (!mem) {
-        return nullptr;
-    }
-    return new (mem) T(static_cast<Args&&>(args)...);
-}
 #endif
 
 
