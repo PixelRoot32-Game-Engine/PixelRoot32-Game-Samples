@@ -110,20 +110,33 @@ public:
 
 void MetroidvaniaScene::init() {
     metroidvaniasceneonetilemap::init();
-    // Sprite palette with original RGB565 from export (idle/run/jump)
+    
+    // Set global sprite palette.
+    // In this engine, 4bpp sprites use an indexed palette.
     pr32::graphics::setSpriteCustomPalette(metroidvania::PLAYER_SPRITE_PALETTE_RGB565);
 
+    // Add map layers as independent entities.
+    // The order of addition determines (by default) the rendering order,
+    // though here it is explicitly specified with setRenderLayer().
     addEntity(new metroidvania::BackgroundLayerEntity());
     addEntity(new metroidvania::PlatformsLayerEntity());
     addEntity(new metroidvania::DetailsLayerEntity());
     addEntity(new metroidvania::StairsLayerEntity());
 
+    // Create and add the player.
     player = new metroidvania::PlayerActor(PLAYER_START_X, PLAYER_START_Y);
     addEntity(player);
 
-    // Build platform rect list from tilemap for collision.
-    // The engine CollisionSystem is Actor-vs-Actor only; the platform layer is a tilemap, not Actors,
-    // so we resolve platform collision manually. Collision layer/mask on the player are for Actor-vs-Actor (e.g. enemies).
+    // Pass stairs layer data to the player for internal logic.
+    player->setStairs(metroidvaniasceneonetilemap::stairs.indices, 
+                      metroidvaniasceneonetilemap::MAP_WIDTH, 
+                      metroidvaniasceneonetilemap::MAP_HEIGHT, 
+                      metroidvaniasceneonetilemap::TILE_SIZE);
+
+    // Build a list of collision rectangles from the platforms layer.
+    // The engine's CollisionSystem manages Actor vs Actor.
+    // For environment (tiles) collisions, in this example we resolve them manually
+    // by passing this list of rectangles to the PlayerActor.
     static metroidvania::PlatformRect platformRects[MAX_PLATFORM_RECTS];
     int platformCount = 0;
     const int tw = metroidvaniasceneonetilemap::TILE_SIZE;
@@ -146,11 +159,22 @@ void MetroidvaniaScene::init() {
 
 void MetroidvaniaScene::update(unsigned long deltaTime) {
     auto& input = engine.getInputManager();
+    
+    // Input management: map buttons to directions.
     float moveDir = 0.0f;
     if (input.isButtonDown(3)) moveDir += 1.0f;  // Right
     if (input.isButtonDown(2)) moveDir -= 1.0f;  // Left
-    bool jumpPressed = input.isButtonPressed(4);  // Jump (A/Space)
-    if (player) player->setInput(moveDir, jumpPressed);
+
+    float vDir = 0.0f;
+    if (input.isButtonDown(0)) vDir -= 1.0f;     // Up
+    if (input.isButtonDown(1)) vDir += 1.0f;     // Down
+
+    bool jumpPressed = input.isButtonPressed(4);  // Jump (A / Space)
+    
+    // Send processed inputs to the player actor.
+    if (player) player->setInput(moveDir, vDir, jumpPressed);
+
+    // Update all entities in the scene.
     pixelroot32::core::Scene::update(deltaTime);
 }
 

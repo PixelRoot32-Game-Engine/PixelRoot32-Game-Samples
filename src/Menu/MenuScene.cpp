@@ -294,12 +294,14 @@ void MenuScene::showMenu(MenuState state) {
             
         case MenuState::GAMES:
             titleLabel->setText("Games");
+#ifdef PIXELROOT32_ENABLE_4BPP_SPRITES
+            buttonLayout->addElement(metroidvaniaButton);
+#endif
             buttonLayout->addElement(pongButton);
             buttonLayout->addElement(brickBrackeButton);
             buttonLayout->addElement(snakeButton);
             buttonLayout->addElement(spaceInvadersButton);
             buttonLayout->addElement(tttButton);
-            buttonLayout->addElement(metroidvaniaButton);
             break;
         
         case MenuState::UIELEMENTS: 

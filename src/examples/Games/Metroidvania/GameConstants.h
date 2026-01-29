@@ -14,6 +14,7 @@ constexpr int PLAYER_HEIGHT = 8;
 
 constexpr float PLAYER_GRAVITY = 400.0f;
 constexpr float PLAYER_MOVE_SPEED = 60.0f;
+constexpr float PLAYER_CLIMB_SPEED = 40.0f;
 constexpr float PLAYER_JUMP_VELOCITY = 160.0f;
 
 constexpr unsigned long ANIMATION_FRAME_TIME_MS = 120;
