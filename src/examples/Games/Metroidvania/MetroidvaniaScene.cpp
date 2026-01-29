@@ -24,12 +24,12 @@ using pr32::graphics::Color;
 class BackgroundLayerEntity : public pr32::core::Entity {
 public:
     BackgroundLayerEntity()
-        : pr32::core::Entity(0.0f, 0.0f, 
+        : pr32::core::Entity(0.0f, 0.0f,
                              static_cast<float>(metroidvaniasceneonetilemap::MAP_WIDTH * metroidvaniasceneonetilemap::TILE_SIZE),
                              static_cast<float>(metroidvaniasceneonetilemap::MAP_HEIGHT * metroidvaniasceneonetilemap::TILE_SIZE),
                              pr32::core::EntityType::GENERIC) {
         setRenderLayer(0);
-        
+
         x = 0.0f;
         y = 0.0f;
     }
@@ -63,27 +63,6 @@ public:
     }
 };
 
-class DetailsLayerEntity : public pr32::core::Entity {
-public:
-    DetailsLayerEntity()
-        : pr32::core::Entity(0.0f, 0.0f,
-                                static_cast<float>(metroidvaniasceneonetilemap::MAP_WIDTH * metroidvaniasceneonetilemap::TILE_SIZE),
-                                static_cast<float>(metroidvaniasceneonetilemap::MAP_HEIGHT * metroidvaniasceneonetilemap::TILE_SIZE),
-                                pr32::core::EntityType::GENERIC) {
-        setRenderLayer(2);
-        
-        x = 0.0f;
-        y = 0.0f;
-    }
-
-    void update(unsigned long) override {
-    }
-
-    void draw(pr32::graphics::Renderer& renderer) override {
-        renderer.drawTileMap(metroidvaniasceneonetilemap::details, static_cast<int>(x), static_cast<int>(y));
-    }
-};
-
 class StairsLayerEntity : public pr32::core::Entity {
 public:
     StairsLayerEntity()
@@ -91,7 +70,7 @@ public:
                              static_cast<float>(metroidvaniasceneonetilemap::MAP_WIDTH * metroidvaniasceneonetilemap::TILE_SIZE),
                              static_cast<float>(metroidvaniasceneonetilemap::MAP_HEIGHT * metroidvaniasceneonetilemap::TILE_SIZE),
                              pr32::core::EntityType::GENERIC) {
-        setRenderLayer(3);
+        setRenderLayer(2);
         
         x = 0.0f;
         y = 0.0f;
@@ -112,12 +91,9 @@ void MetroidvaniaScene::init() {
     // In this engine, 4bpp sprites use an indexed palette.
     pr32::graphics::setSpriteCustomPalette(metroidvania::PLAYER_SPRITE_PALETTE_RGB565);
 
-    // Add map layers as independent entities.
-    // The order of addition determines (by default) the rendering order,
-    // though here it is explicitly specified with setRenderLayer().
+    // Map layers
     addEntity(new metroidvania::BackgroundLayerEntity());
     addEntity(new metroidvania::PlatformsLayerEntity());
-    addEntity(new metroidvania::DetailsLayerEntity());
     addEntity(new metroidvania::StairsLayerEntity());
 
     // Create and add the player.

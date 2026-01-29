@@ -13,7 +13,7 @@ namespace metroidvaniasceneonetilemap {
 
     // --- Tile Dimensions ---
     static const uint8_t TILE_SIZE = 8;
-    static const uint8_t MAP_WIDTH = 40;
+    static const uint8_t MAP_WIDTH = 30;
     static const uint8_t MAP_HEIGHT = 30;
 
     // --- Layer Definitions ---
@@ -23,8 +23,6 @@ namespace metroidvaniasceneonetilemap {
     extern pixelroot32::graphics::TileMap4bpp platforms;
     
     extern pixelroot32::graphics::TileMap4bpp stairs;
-    
-    extern pixelroot32::graphics::TileMap4bpp details;
     
 
     /**
