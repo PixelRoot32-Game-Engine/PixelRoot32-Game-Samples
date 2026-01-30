@@ -1,12 +1,13 @@
 # FPS Optimizations – Metroidvania on ESP32
 
-Goal: increase from ~14 stable FPS to ~20 FPS without changing gameplay or game architecture.
+Goal: Maintain a stable **14 FPS** (physical SPI limit for 240x240) and reduce CPU overhead to ensure smooth gameplay without stutters.
 
 ## Context
 
 - **Engine**: PixelRoot32 with tile-based collision (O(1) per cell), already optimized according to `COLLISION_LAYERS_IMPLEMENTATION_PLAN.md`.
-- **Display**: 240×240, 30×30 tile map with 8×8 px tiles (3 layers: background, platforms, stairs).
-- **Main Bottleneck**: Draw time (3 tilemaps + player) and reads from Flash (PROGMEM) during collision and rendering.
+- **Display**: 240×240 physical resolution.
+- **Main Bottleneck**: The **SPI Bus (40MHz)**. At 240x240 pixels, the time required to transfer 57,600 pixels (16-bit color) via SPI effectively caps the frame rate at ~14 FPS.
+- **Secondary Bottleneck**: Reads from Flash (PROGMEM) during collision and rendering which can cause micro-stutters.
 
 ---
 
@@ -75,10 +76,10 @@ Goal: increase from ~14 stable FPS to ~20 FPS without changing gameplay or game 
 
 | Priority | Action | Invasiveness | Expected Impact |
 |-----------|--------|-------------|------------------|
-| 1 | Stairs cache in RAM (already done) | Low | 1–2 FPS |
-| 2 | Add `-O2` for ESP32 | None | Variable, often 1–3 FPS |
-| 3 | Remove FPS overlay in release build | None | Small |
-| 4 | Increase `ANIMATION_FRAME_TIME_MS` to 150 | Low | Small |
-| 5 | Check CPU 240 MHz and, if applicable, SPI 80 MHz | None / Low | Variable |
+| 1 | Stairs cache in RAM (already done) | Low | Reduced CPU load / Stability |
+| 2 | Add `-O2` for ESP32 | None | Better logic execution speed |
+| 3 | Remove FPS overlay in release build | None | Reduced draw calls |
+| 4 | Increase `ANIMATION_FRAME_TIME_MS` to 150 | Low | Smoother logic pacing |
+| 5 | Check CPU 240 MHz | None | Max processing power |
 
-Combining 1 + 2 + 3 (+ 4 if you want) it's reasonable to target about 18–20 stable FPS; if the bottleneck remains at the TFT, the next path would be trying higher SPI or reducing resolution/drawn area (more invasive).
+Combining 1 + 2 + 3 (+ 4 if you want) the goal is to reach the **14 FPS** ceiling and maintain it with zero frame drops. If higher performance is required, the only physical path is reducing the resolution to **128x128**, which allows for **30-40+ FPS**.
