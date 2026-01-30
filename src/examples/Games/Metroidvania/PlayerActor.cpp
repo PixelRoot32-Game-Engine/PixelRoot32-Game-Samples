@@ -3,7 +3,7 @@
 #include "assets/PlayerRunSprites.h"
 #include "assets/PlayerJumSprites.h"
 #include "assets/PlayerPalette.h"
-#include "Config.h"
+#include "EngineConfig.h"
 #include "graphics/Renderer.h"
 #include "graphics/Color.h"
 #if defined(ESP32) || defined(ESP8266)

@@ -1,7 +1,7 @@
 #pragma once
 #include "core/Scene.h"
 #include "graphics/Renderer.h"
-#include "Config.h"
+#include "EngineConfig.h"
 
 namespace fonttest {
 

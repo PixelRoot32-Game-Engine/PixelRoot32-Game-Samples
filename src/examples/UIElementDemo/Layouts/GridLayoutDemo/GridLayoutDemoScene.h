@@ -5,7 +5,7 @@
 #include "graphics/ui/UILabel.h"
 #include "graphics/ui/UIButton.h"
 #include "graphics/ui/UIPaddingContainer.h"
-#include "Config.h"
+#include "EngineConfig.h"
 
 namespace gridlayoutdemo {
 

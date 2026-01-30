@@ -4,7 +4,7 @@
 #include "graphics/ui/UIVerticalLayout.h"
 #include "graphics/ui/UILabel.h"
 #include "graphics/ui/UIButton.h"
-#include "Config.h"
+#include "EngineConfig.h"
 
 namespace buttondemo {
 

@@ -3,7 +3,6 @@
 // #include <drivers/esp32/ESP32_I2S_AudioBackend.h> // Uncomment for I2S (MAX98357A)
 #include <drivers/esp32/ESP32_DAC_AudioBackend.h> // Uncomment for DAC (PAM8302A)
 #include  <core/Engine.h>
-#include "Config.h"
 
 #include "Menu/MenuScene.h"
 
@@ -35,7 +34,14 @@ const int BTN_B = 12;
 // Option B: Internal DAC (Retro quality, internal DAC + PAM8302A)
 pr32::drivers::esp32::ESP32_DAC_AudioBackend audioBackend(DAC_PIN, 11025); // Lower sample rate for simple dacWrite stability
 
-pr32::graphics::DisplayConfig config(pr32::graphics::DisplayType::ST7789, DISPLAY_ROTATION, DISPLAY_HEIGHT, DISPLAY_WIDTH);
+pr32::graphics::DisplayConfig config(
+    pr32::graphics::DisplayType::ST7789, 
+    DISPLAY_ROTATION, 
+    PHYSICAL_DISPLAY_WIDTH, 
+    PHYSICAL_DISPLAY_HEIGHT,
+    LOGICAL_WIDTH,
+    LOGICAL_HEIGHT
+);
 
 pr32::input::InputConfig inputConfig(6, BTN_UP, BTN_DOWN, BTN_LEFT, BTN_RIGHT, BTN_A, BTN_B); // 6 buttons: Up, Down, Left, Right, A, B
 

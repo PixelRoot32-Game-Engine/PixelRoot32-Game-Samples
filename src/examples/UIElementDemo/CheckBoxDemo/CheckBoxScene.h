@@ -4,7 +4,6 @@
 #include "graphics/ui/UIVerticalLayout.h"
 #include "graphics/ui/UILabel.h"
 #include "graphics/ui/UICheckBox.h"
-#include "Config.h"
 
 namespace checkboxdemo {
 

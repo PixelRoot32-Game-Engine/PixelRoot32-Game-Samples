@@ -1,6 +1,6 @@
 // BrickActor.cpp
 #include "BrickActor.h"
-#include "Config.h"
+#include "EngineConfig.h"
 
 namespace pr32 = pixelroot32;
 

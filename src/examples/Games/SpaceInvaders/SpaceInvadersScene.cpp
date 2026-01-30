@@ -4,6 +4,7 @@
 #include "ProjectileActor.h"
 #include "BunkerActor.h"
 #include "GameConstants.h"
+#include "EngineConfig.h"
 #include "core/Engine.h"
 #include "audio/AudioTypes.h"
 #include "audio/AudioMusicTypes.h"

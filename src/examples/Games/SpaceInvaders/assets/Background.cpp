@@ -1,5 +1,5 @@
 #include "Background.h"
-#include "Config.h"
+#include "EngineConfig.h"
 
 namespace background_assets {
 

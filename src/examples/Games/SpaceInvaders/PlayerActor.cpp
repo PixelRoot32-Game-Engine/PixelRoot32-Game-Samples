@@ -1,4 +1,5 @@
 #include "PlayerActor.h"
+#include "EngineConfig.h"
 #include "GameConstants.h"
 #include "core/Engine.h"
 
