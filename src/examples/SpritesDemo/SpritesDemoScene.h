@@ -2,7 +2,7 @@
 #include "core/Scene.h"
 #include "graphics/Renderer.h"
 #include "graphics/Color.h"
-#include "Config.h"
+#include "EngineConfig.h"
 #include "assets/Sprites.h"
 #include "assets/SpritesPopup.h"
 

@@ -1,6 +1,6 @@
 #include "CameraDemoScene.h"
 #include "core/Engine.h"
-#include "Config.h"
+#include "EngineConfig.h"
 #include "input/InputManager.h"
 #include "graphics/Renderer.h"
 #include "GameConstants.h"

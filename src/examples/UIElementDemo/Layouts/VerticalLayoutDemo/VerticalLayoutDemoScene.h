@@ -3,7 +3,7 @@
 #include "graphics/Renderer.h"
 #include "graphics/ui/UIVerticalLayout.h"
 #include "graphics/ui/UILabel.h"
-#include "Config.h"
+#include "EngineConfig.h"
 
 namespace verticallayoutdemo {
 

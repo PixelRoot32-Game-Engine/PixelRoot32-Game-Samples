@@ -1,5 +1,5 @@
 #include "BrickBreakerScene.h"
-#include "Config.h"
+#include "EngineConfig.h"
 #include "core/Engine.h"
 #include "graphics/Color.h"
 #include "graphics/particles/ParticlePresets.h"

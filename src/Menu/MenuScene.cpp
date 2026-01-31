@@ -1,7 +1,7 @@
 #include "MenuScene.h"
 #include "MenuConstants.h"
 #include "core/Engine.h"
-#include "Config.h"
+#include "EngineConfig.h"
 #include "graphics/Renderer.h"
 
 #include "examples/Games/Pong/PongScene.h"

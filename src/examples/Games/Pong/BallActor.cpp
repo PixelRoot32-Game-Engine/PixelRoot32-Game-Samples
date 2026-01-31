@@ -3,7 +3,7 @@
 #include "audio/AudioTypes.h"
 #include <cstdlib>
 #include <cmath>
-#include <Config.h>
+#include "EngineConfig.h"
 
 extern pixelroot32::core::Engine engine;
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/Scene.h"
-#include "Config.h"
+#include "EngineConfig.h"
 #include "GameConstants.h"
 
 namespace tictactoe {

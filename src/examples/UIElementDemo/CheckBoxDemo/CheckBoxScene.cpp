@@ -1,5 +1,6 @@
 #include "CheckBoxScene.h"
 #include "core/Engine.h"
+#include "EngineConfig.h"
 #include "Menu/MenuScene.h"
 #include "graphics/Color.h"
 #include "graphics/Renderer.h"

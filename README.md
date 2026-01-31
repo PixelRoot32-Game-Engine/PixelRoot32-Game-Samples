@@ -351,6 +351,10 @@ The **Metroidvania** example (under [`src/examples/Games/Metroidvania`](src/exam
 - Gravity and world bounds are handled by `PhysicsActor`; platform and ladder logic are custom in the player using the tile indices.
 - The player is drawn with **4bpp sprites** (idle, run, jump, climb animations) via `renderer.drawSprite`, with flip for facing direction.
 
+### Optimization and Performance
+
+- This sample includes a dedicated guide for improving performance on ESP32: [FPS Optimizations](src/examples/Games/Metroidvania/FPS_OPTIMIZATIONS.md). It covers build flags, RAM caching, and hardware recommendations to achieve stable frame rates.
+
 ### Engine features used
 
 - **Scene** lifecycle (`init`, `update`, `draw`), **Entity** for static tilemap layers, **PhysicsActor** for the player.

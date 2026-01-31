@@ -2,7 +2,7 @@
 #include "core/Scene.h"
 #include "graphics/Renderer.h"
 #include "graphics/Color.h"
-#include "Config.h"
+#include "EngineConfig.h"
 
 namespace metroidvania {
 

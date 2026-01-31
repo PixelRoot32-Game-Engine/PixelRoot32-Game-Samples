@@ -3,7 +3,7 @@
 #include "PaddleActor.h"
 #include "BallActor.h"
 #include "graphics/Color.h"
-#include "Config.h"
+#include "EngineConfig.h"
 #include "GameConstants.h"
 
 namespace pong {
