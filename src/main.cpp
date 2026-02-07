@@ -3,6 +3,7 @@
 // #include <drivers/esp32/ESP32_I2S_AudioBackend.h> // Uncomment for I2S (MAX98357A)
 #include <drivers/esp32/ESP32_DAC_AudioBackend.h> // Uncomment for DAC (PAM8302A)
 #include  <core/Engine.h>
+#include "EngineConfig.h"
 
 #include "Menu/MenuScene.h"
 
