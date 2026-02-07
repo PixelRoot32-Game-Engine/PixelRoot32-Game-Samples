@@ -141,9 +141,6 @@ void BrickBreakerScene::resetBall() {
 }
 
 void BrickBreakerScene::update(unsigned long deltaTime) {
-    // Update music
-    musicPlayer->update(deltaTime);
-
     // 1. Input Processing
     if (gameOver) {
         if (engine.getInputManager().isButtonPressed(BTN_START)) {
